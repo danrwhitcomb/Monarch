@@ -157,6 +157,10 @@ void RenderViewContextMenuMac::ExecuteCommand(int command_id, int event_flags) {
     case IDC_CONTENT_CONTEXT_SPEECH_STOP_SPEAKING:
       StopSpeaking();
       break;
+			
+		case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
+			VLOG(1) << "Launching page as Dynamic App!";
+			break;
 
     case IDC_WRITING_DIRECTION_DEFAULT:
       // WebKit's current behavior is for this menu item to always be disabled.
@@ -215,6 +219,10 @@ bool RenderViewContextMenuMac::IsCommandIdEnabled(int command_id) const {
           GetRenderViewHost()->GetWidget()->GetView();
       return view && view->IsSpeaking();
     }
+			
+		case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
+			//For now always true. When dev support happens, more logic to be added
+			return true;
 
     case IDC_WRITING_DIRECTION_DEFAULT:  // Provided to match OS defaults.
       return params_.writing_direction_default &
@@ -242,6 +250,16 @@ void RenderViewContextMenuMac::AppendPlatformEditableItems() {
   // languages.
   // This functionality is exposed as a keyboard shortcut on Windows & Linux.
   AppendBidiSubMenu();
+}
+
+void RenderViewContextMenuMac::InitMenu(){
+	RenderViewContextMenu::InitMenu();
+	AppendDynAppModeItems();
+}
+
+void RenderViewContextMenuMac::AppendDynAppModeItems(){
+	menu_model_.AddSeparator(ui::NORMAL_SEPARATOR);
+	menu_model_.AddItemWithStringId(IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE, IDS_CONTENT_CONTEXT_ENTERDYNAPPMODE);
 }
 
 void RenderViewContextMenuMac::InitToolkitMenu() {

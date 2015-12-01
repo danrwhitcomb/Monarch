@@ -256,9 +256,10 @@ const struct UmaEnumCommandIdPair {
     {69, -1, IDC_CONTENT_CONTEXT_COPYLINKTEXT},
     {70, -1, IDC_CONTENT_CONTEXT_OPENLINKINPROFILE},
     {71, -1, IDC_OPEN_LINK_IN_PROFILE_FIRST},
+    {72, -1, IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE},
     // Add new items here and use |enum_id| from the next line.
     // Also, add new items to RenderViewContextMenuItem enum in histograms.xml.
-    {72, -1, 0},  // Must be the last. Increment |enum_id| when new IDC
+    {73, -1, 0},  // Must be the last. Increment |enum_id| when new IDC
                   // was added.
 };
 

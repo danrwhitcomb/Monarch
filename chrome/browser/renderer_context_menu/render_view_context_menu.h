@@ -83,6 +83,9 @@ class RenderViewContextMenu : public RenderViewContextMenuBase {
   extensions::ContextMenuMatcher extension_items_;
 #endif
   void RecordUsedItem(int id) override;
+	
+	//RenderViewContextMenuBase:
+	void InitMenu() override; //Made protected to allow Mac to override
 
  private:
   friend class RenderViewContextMenuTest;
@@ -100,7 +103,6 @@ class RenderViewContextMenu : public RenderViewContextMenuBase {
 #endif
 
   // RenderViewContextMenuBase:
-  void InitMenu() override;
   void RecordShownItem(int id) override;
 #if defined(ENABLE_PLUGINS)
   void HandleAuthorizeAllPlugins() override;

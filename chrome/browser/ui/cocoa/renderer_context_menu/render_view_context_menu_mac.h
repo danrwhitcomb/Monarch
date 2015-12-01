@@ -35,7 +35,10 @@ class RenderViewContextMenuMac : public RenderViewContextMenu {
   bool GetAcceleratorForCommandId(int command_id,
                                   ui::Accelerator* accelerator) override;
   void AppendPlatformEditableItems() override;
-
+	void InitMenu() override;
+	
+	void AppendDynAppModeItems();
+	
  private:
   friend class ToolkitDelegateMac;
 

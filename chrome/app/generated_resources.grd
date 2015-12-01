@@ -871,6 +871,9 @@ Psst! Incognito mode <ph name="SHORTCUT_KEY">$1<ex>(Ctrl+Shift+N)</ex></ph> may 
           <message name="IDS_CONTENT_CONTEXT_LANGUAGE_SETTINGS" desc="The name of the Language Settings command in the content area context menu">
             &amp;Language settings...
           </message>
+					<message name="IDS_CONTENT_CONTEXT_ENTERDYNAPPMODE" desc="Opens the tab in dynamic app mode">
+						Enter App Mode
+					</message>
         </if>
         <if expr="use_titlecase">
           <message name="IDS_CONTENT_CONTEXT_BACK" desc="In Title Case: The name of the Back command in the content area context menu">
@@ -1098,6 +1101,9 @@ Psst! Incognito mode <ph name="SHORTCUT_KEY">$1<ex>(Ctrl+Shift+N)</ex></ph> may 
           <message name="IDS_CONTENT_CONTEXT_LANGUAGE_SETTINGS" desc="In Title Case: The name of the Language Settings command in the content area context menu">
             &amp;Language Settings...
           </message>
+					<message name="IDS_CONTENT_CONTEXT_ENTERDYNAPPMODE" desc="Opens the tab in dynamic app mode">
+						Enter App Mode
+					</message>
         </if>
       </if>
 
