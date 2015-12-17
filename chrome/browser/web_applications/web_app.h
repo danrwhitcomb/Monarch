@@ -112,11 +112,10 @@ typedef base::Callback<void(scoped_ptr<ShortcutInfo>,
 // Called by GetShortcutInfoForApp after fetching the ShortcutInfo.
 typedef base::Callback<void(scoped_ptr<ShortcutInfo>)> ShortcutInfoCallback;
 
-#if defined(TOOLKIT_VIEWS)
 // Extracts shortcut info of the given WebContents.
 scoped_ptr<ShortcutInfo> GetShortcutInfoForTab(
     content::WebContents* web_contents);
-#endif
+
 
 // Updates web app shortcut of the WebContents. This function checks and
 // updates web app icon and shortcuts if needed. For icon, the check is based

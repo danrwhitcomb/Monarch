@@ -3040,6 +3040,7 @@
         ['OS=="mac"', {
           'sources': [ '<@(chrome_browser_ui_mac_sources)' ],
           'dependencies': [
+            'chrome_monarch.gypi:chrome_monarch',
             '../third_party/apple_sample_code/apple_sample_code.gyp:apple_sample_code',
             '../third_party/google_toolbox_for_mac/google_toolbox_for_mac.gyp:google_toolbox_for_mac',
             '../third_party/molokocacao/molokocacao.gyp:molokocacao',

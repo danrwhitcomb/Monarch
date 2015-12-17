@@ -65,6 +65,9 @@ class RenderViewContextMenuMac : public RenderViewContextMenu {
 
   // Handler for the "Stop Speaking" menu item.
   void StopSpeaking();
+  
+  //Handler to open tab in app
+  void CreateDynamicApp();
 
   // The Cocoa menu controller for this menu.
   base::scoped_nsobject<MenuController> menu_controller_;

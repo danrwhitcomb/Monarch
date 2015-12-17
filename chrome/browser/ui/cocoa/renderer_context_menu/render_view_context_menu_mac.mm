@@ -16,8 +16,10 @@
 #include "content/public/browser/render_widget_host_view.h"
 #import "ui/base/cocoa/menu_controller.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "chrome/monarch/dynamic_app_manager.h"
 
 using content::WebContents;
+using content::BrowserThread;
 
 namespace {
 
@@ -158,9 +160,9 @@ void RenderViewContextMenuMac::ExecuteCommand(int command_id, int event_flags) {
       StopSpeaking();
       break;
 			
-		case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
-			VLOG(1) << "Launching page as Dynamic App!";
-			break;
+    case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
+      CreateDynamicApp();
+      break;
 
     case IDC_WRITING_DIRECTION_DEFAULT:
       // WebKit's current behavior is for this menu item to always be disabled.
@@ -220,9 +222,9 @@ bool RenderViewContextMenuMac::IsCommandIdEnabled(int command_id) const {
       return view && view->IsSpeaking();
     }
 			
-		case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
-			//For now always true. When dev support happens, more logic to be added
-			return true;
+    case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
+        //For now always true. When dev support happens, more logic to be added
+        return true;
 
     case IDC_WRITING_DIRECTION_DEFAULT:  // Provided to match OS defaults.
       return params_.writing_direction_default &
@@ -327,6 +329,12 @@ void RenderViewContextMenuMac::UpdateToolkitMenuItem(
   [item setTitle:base::SysUTF16ToNSString(title)];
   [item setHidden:hidden];
   [[item menu] itemChanged:item];
+}
+
+void RenderViewContextMenuMac::CreateDynamicApp(){
+  WebContents* web_contents = GetWebContents();
+  BrowserThread::PostTask(BrowserThread::FILE, FROM_HERE,
+                          base::Bind(&monarch_app::BuildDynamicApp, web_contents));
 }
 
 void RenderViewContextMenuMac::AppendBidiSubMenu() {
