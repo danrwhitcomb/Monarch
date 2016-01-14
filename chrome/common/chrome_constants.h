@@ -41,6 +41,8 @@ extern const base::FilePath::CharType kHelperProcessExecutablePathChromium[];
 // TODO(tfarina): Remove the comment above, when you fix components to use plist
 // on Mac.
 extern const base::FilePath::CharType kFrameworkName[];
+extern const base::FilePath::CharType kTempWebAppDirName[];
+extern const base::FilePath::CharType kBaseExtName[];
 #endif  // OS_MACOSX
 #if defined(OS_WIN)
 extern const base::FilePath::CharType kBrowserResourcesDll[];

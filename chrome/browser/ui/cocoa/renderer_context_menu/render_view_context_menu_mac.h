@@ -9,8 +9,12 @@
 
 #include "base/mac/scoped_nsobject.h"
 #include "chrome/browser/renderer_context_menu/render_view_context_menu.h"
+#include "extensions/browser/extension_system.h"
 
 @class MenuController;
+namespace {
+  class ExtensionSystem;
+}
 
 // Mac implementation of the context menu display code. Uses a Cocoa NSMenu
 // to display the context menu. Internally uses an obj-c object as the

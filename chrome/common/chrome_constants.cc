@@ -118,6 +118,8 @@ const base::FilePath::CharType kHelperProcessExecutablePath[] = FPL("chrome");
 #if defined(OS_MACOSX)
 const base::FilePath::CharType kFrameworkName[] =
     FPL(PRODUCT_STRING " Framework.framework");
+const base::FilePath::CharType kBaseExtName[] = FPL("base_ext");
+const base::FilePath::CharType kTempWebAppDirName[] = FPL("Temporary Applications");
 #endif  // OS_MACOSX
 
 #if defined(OS_WIN)

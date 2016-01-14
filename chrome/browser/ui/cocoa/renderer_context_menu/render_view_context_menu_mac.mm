@@ -10,6 +10,7 @@
 #include "base/strings/sys_string_conversions.h"
 #include "base/tracked_objects.h"
 #include "chrome/app/chrome_command_ids.h"
+#include "chrome/browser/extensions/extension_service.h"
 #include "chrome/grit/generated_resources.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
@@ -333,8 +334,11 @@ void RenderViewContextMenuMac::UpdateToolkitMenuItem(
 
 void RenderViewContextMenuMac::CreateDynamicApp(){
   WebContents* web_contents = GetWebContents();
+  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(web_contents);
+  ExtensionService* ext_ser = extensions::ExtensionSystem::Get(web_contents->GetBrowserContext())->extension_service();
+  
   BrowserThread::PostTask(BrowserThread::FILE, FROM_HERE,
-                          base::Bind(&monarch_app::BuildDynamicApp, web_contents));
+                          base::Bind(&monarch_app::BuildDynamicApp, base::Passed(&info), ext_ser));
 }
 
 void RenderViewContextMenuMac::AppendBidiSubMenu() {

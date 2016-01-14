@@ -73,6 +73,7 @@
   ],
   'dependencies': [
     'app_mode_app',
+    'chrome_monarch.gypi:chrome_monarch_base',
     # Bring in pdfsqueeze and run it on all pdfs
     '../build/temp_gyp/pdfsqueeze.gyp:pdfsqueeze',
     '../crypto/crypto.gyp:crypto',
@@ -197,6 +198,13 @@
       'files': [
         # Loader bundle for platform apps.
         '<(PRODUCT_DIR)/app_mode_loader.app',
+      ],
+    },
+    {
+      'destination': '<(PRODUCT_DIR)/$(CONTENTS_FOLDER_PATH)/Resources',
+      'files': [
+        # Loader bundle for platform apps.
+        '<(PRODUCT_DIR)/base_ext/base_ext',
       ],
     },
   ],
