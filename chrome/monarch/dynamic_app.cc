@@ -8,10 +8,13 @@
 #include <string>
 #include <map>
 #include "base/files/file_path.h"
+#include "base/files/file.h"
+#include "base/files/file_util.h"
+#include "content/public/browser/browser_thread.h"
 #include "components/crx_file/id_util.h"
 #include "chrome/browser/web_applications/web_app.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
-#include "chrome/monarch/dynamic_app_manager.h"
+#include "chrome/monarch/dynamic_app_service.h"
 #include "chrome/monarch/monarch_util.h"
 
 #include "chrome/monarch/dynamic_app.h"
@@ -25,10 +28,19 @@ const std::string kAppURL("%APP_URL%");
 const std::string kAppID("%APP_ID%");
 
 
-DynamicApp::DynamicApp(scoped_ptr<ShortcutInfo> info):
-    shortcut_info_(std::move(info)){
+scoped_refptr<DynamicApp> DynamicApp::Create(scoped_ptr<ShortcutInfo> info, base::FilePath profile_path){
+    return scoped_refptr<DynamicApp>(new DynamicApp(std::move(info), profile_path));
+}
+
+DynamicApp::DynamicApp(scoped_ptr<ShortcutInfo> info, base::FilePath profile_path):
+    shortcut_info_(std::move(info)),
+    profile_path_(profile_path)
+{
   std::string name = String16ToString(shortcut_info_->title);
   extension_dir_ = crx_file::id_util::GenerateId(name);
+  
+  base::FilePath ext_dir = GetExtensionPath();
+  shortcut_info_->extension_id = crx_file::id_util::GenerateIdForPath(ext_dir.Append("1.0_0"));
 }
 
 DynamicApp::~DynamicApp(){}
@@ -42,14 +54,12 @@ std::string DynamicApp::GetAppName(){
 }
 
 base::FilePath DynamicApp::GetExtensionPath(){
-  base::FilePath profile_path = GetProfilePath();
-  base::FilePath ext_path = GetTempExtDirectory(profile_path);
+  base::FilePath ext_path = GetTempExtDirectory(profile_path_);
   return ext_path.Append(extension_dir_);
 }
 
 base::FilePath DynamicApp::GetAppBundlePath(){
-  base::FilePath prof_path = GetProfilePath();
-  return GetTempAppDirectory(prof_path).Append("_crx_" + GetExtensionID());
+  return GetTempAppDirectory(profile_path_).Append("_crx_" + GetExtensionID());
 }
 
 std::string DynamicApp::GetPlainAppURL(){
@@ -64,10 +74,32 @@ void DynamicApp::SetExtensionID(std::string extension_id){
   shortcut_info_->extension_id = extension_id;
 }
 
-bool DynamicApp::SetupMockExtension(){
-  return ReplaceHTMLData() &&
-         ReplaceManifestData() &&
-         ReplaceBackgroundJSData();
+bool DynamicApp::CopyBaseExtension(){
+  base::FilePath ext_dir = GetExtensionPath();
+  if(!base::DirectoryExists(ext_dir)){
+    File::Error err = File::Error::FILE_OK;
+    base::CreateDirectoryAndGetError(ext_dir, &err);
+    
+    if(err != File::Error::FILE_OK){
+      return false;
+    }
+  }
+  
+  if(!base::CopyDirectory(GetBaseExtPath().Append("1.0_0"), ext_dir, true)){
+    return false;
+  }
+  
+  return true;
+}
+
+void DynamicApp::SetupMockExtension(){
+
+  CopyBaseExtension();
+
+  ReplaceHTMLData();
+  ReplaceManifestData();
+  ReplaceBackgroundJSData();
+  
 }
 
 bool DynamicApp::ReplaceBackgroundJSData(){

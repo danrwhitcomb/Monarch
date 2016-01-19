@@ -91,14 +91,7 @@ base::FilePath GetTempExtDirectory(base::FilePath& profile_path){
 
 base::FilePath GetBaseExtPath(){
   return base::mac::PathForFrameworkBundleResource(
-                                                   base::mac::NSToCFCast([NSString stringWithUTF8String:chrome::kBaseExtName]));
-}
-
-base::FilePath GetProfilePath(){
-  base::FilePath user_data_dir;
-  if(!chrome::GetUserDataDirectoryForBrowserBundle(chrome::OuterAppBundle(), &user_data_dir))
-    return base::FilePath();
-  return user_data_dir.Append("Default");
+        base::mac::NSToCFCast([NSString stringWithUTF8String:chrome::kBaseExtName]));
 }
 
 }

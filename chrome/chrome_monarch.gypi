@@ -18,12 +18,14 @@
       ],
       'conditions': [],
       'sources': [
-        'monarch/dynamic_app_manager.mm',
-        'monarch/dynamic_app_manager.h',
+        'monarch/dynamic_app_service.mm',
+        'monarch/dynamic_app_service.h',
         'monarch/dynamic_app.h',
         'monarch/dynamic_app.cc',
         'monarch/monarch_util.h',
-        'monarch/monarch_util.mm'
+        'monarch/monarch_util.mm',
+        'monarch/dynamic_app_service_factory.h',
+        'monarch/dynamic_app_service_factory.cc'
       ],
     },
     {

@@ -5,7 +5,7 @@
 #include "chrome/browser/ui/cocoa/renderer_context_menu/render_view_context_menu_mac.h"
 
 #include "base/compiler_specific.h"
-#import "base/mac/scoped_sending_event.h"
+#import  "base/mac/scoped_sending_event.h"
 #include "base/message_loop/message_loop.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/tracked_objects.h"
@@ -15,9 +15,11 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
-#import "ui/base/cocoa/menu_controller.h"
+#import  "ui/base/cocoa/menu_controller.h"
 #include "ui/base/l10n/l10n_util.h"
-#include "chrome/monarch/dynamic_app_manager.h"
+#include "chrome/monarch/dynamic_app_service.h"
+#include "chrome/monarch/dynamic_app_service_factory.h"
+#include "content/public/browser/browser_context.h"
 
 using content::WebContents;
 using content::BrowserThread;
@@ -335,10 +337,9 @@ void RenderViewContextMenuMac::UpdateToolkitMenuItem(
 void RenderViewContextMenuMac::CreateDynamicApp(){
   WebContents* web_contents = GetWebContents();
   scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(web_contents);
-  ExtensionService* ext_ser = extensions::ExtensionSystem::Get(web_contents->GetBrowserContext())->extension_service();
+  scoped_refptr<monarch_app::DynamicAppService> service = monarch_app::DynamicAppServiceFactory::GetForContext(web_contents->GetBrowserContext());
   
-  BrowserThread::PostTask(BrowserThread::FILE, FROM_HERE,
-                          base::Bind(&monarch_app::BuildDynamicApp, base::Passed(&info), ext_ser));
+  service->BuildAppFromTab(std::move(info));
 }
 
 void RenderViewContextMenuMac::AppendBidiSubMenu() {
