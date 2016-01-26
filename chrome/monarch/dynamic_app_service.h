@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <map>
 
+#include "chrome/browser/apps/app_shim/app_shim_host_observer.h"
+#include "chrome/browser/apps/app_shim/app_shim_host_mac.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
@@ -30,7 +32,8 @@ using namespace base;
 using namespace content;
 using namespace web_app;
 
-class DynamicAppService : public RefcountedKeyedService {
+class DynamicAppService : public RefcountedKeyedService,
+                          public apps::AppShimHostObserver {
   public:
     //Handles dynamically creating and destroying
 
@@ -43,6 +46,10 @@ class DynamicAppService : public RefcountedKeyedService {
 
   private:
     ~DynamicAppService() override;
+    
+    //AppShimHostObserver overrides
+    void AppShimLaunched(AppShimHost* host) override;
+    void AppShimClosed(AppShimHost* host) override;
   
     std::map<std::string, scoped_refptr<DynamicApp>> apps_;
     ExtensionService* extension_service_;

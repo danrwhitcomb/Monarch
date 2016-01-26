@@ -10,8 +10,10 @@
 
 #include "base/files/file_path.h"
 #include "base/memory/scoped_ptr.h"
+#include "base/observer_list.h"
 #include "base/threading/non_thread_safe.h"
 #include "chrome/browser/apps/app_shim/app_shim_handler_mac.h"
+#include "chrome/browser/apps/app_shim/app_shim_host_observer.h"
 #include "ipc/ipc_listener.h"
 #include "ipc/ipc_sender.h"
 
@@ -20,6 +22,10 @@ struct ChannelHandle;
 class ChannelProxy;
 class Message;
 }  // namespace IPC
+
+namespace apps {
+  class AppShimHostObserver;
+} // namespace apps
 
 // This is the counterpart to AppShimController in
 // chrome/app/chrome_main_app_mode_mac.mm. The AppShimHost owns itself, and is
@@ -37,6 +43,9 @@ class AppShimHost : public IPC::Listener,
   // file descriptor of a channel created by an UnixDomainSocketAcceptor,
   // and begins listening for messages on it.
   void ServeChannel(const IPC::ChannelHandle& handle);
+
+  void AddObserver(apps::AppShimHostObserver* observer);
+  void RemoveObserver(apps::AppShimHostObserver* observer);
 
  protected:
   // IPC::Listener implementation.
@@ -81,6 +90,7 @@ class AppShimHost : public IPC::Listener,
   std::string app_id_;
   base::FilePath profile_path_;
   bool initial_launch_finished_;
+  base::ObserverList<apps::AppShimHostObserver> observers_;
 };
 
 #endif  // CHROME_BROWSER_APPS_APP_SHIM_APP_SHIM_HOST_MAC_H_

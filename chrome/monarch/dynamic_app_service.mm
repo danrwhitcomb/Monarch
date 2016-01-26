@@ -16,6 +16,9 @@
 #include "chrome/browser/extensions/launch_util.h"
 #include "chrome/browser/ui/extensions/application_launch.h"
 #include "chrome/browser/ui/extensions/app_launch_params.h"
+#include "chrome/browser/apps/app_shim/app_shim_host_observer.h"
+#include "chrome/browser/apps/app_shim/app_shim_host_mac.h"
+
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/browser_thread.h"
 #include "base/memory/scoped_ptr.h"
@@ -38,9 +41,7 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
   extension_service_(extensions::ExtensionSystem::Get(context)->extension_service()),
   browser_context_(context){}
 
-void DynamicAppService::ShutdownOnUIThread(){
-  
-}
+void DynamicAppService::ShutdownOnUIThread(){}
 
 DynamicAppService::~DynamicAppService(){}
 
@@ -61,7 +62,7 @@ void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
   
   OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_),
                                   extension, launch_container,
-                                  NEW_FOREGROUND_TAB, extensions::SOURCE_MANAGEMENT_API));
+                                  NEW_FOREGROUND_TAB, extensions::SOURCE_DYNAMIC_LAUNCH));
 }
 
 bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortcut_info){
@@ -86,6 +87,15 @@ bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortc
   return true;
 }
 
+void DynamicAppService::AppShimLaunched(AppShimHost* host){
+  int i = 1;
+  i += 1;
+}
+
+void DynamicAppService::AppShimClosed(AppShimHost* host){
+  int i = 1;
+  i += 1;
+}
 
 
 } //namespace monarch

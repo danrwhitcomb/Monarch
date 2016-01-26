@@ -8,6 +8,7 @@
 #include "base/files/file_path.h"
 #include "base/logging.h"
 #include "chrome/browser/apps/app_shim/app_shim_handler_mac.h"
+#include "chrome/browser/apps/app_shim/app_shim_host_observer.h"
 #include "chrome/common/mac/app_shim_messages.h"
 #include "content/public/browser/browser_thread.h"
 #include "ipc/ipc_channel_proxy.h"
@@ -30,6 +31,14 @@ void AppShimHost::ServeChannel(const IPC::ChannelHandle& handle) {
       this,
       content::BrowserThread::GetMessageLoopProxyForThread(
           content::BrowserThread::IO).get());
+}
+
+void AppShimHost::AddObserver(apps::AppShimHostObserver* observer){
+  observers_.AddObserver(observer);
+}
+
+void AppShimHost::RemoveObserver(apps::AppShimHostObserver* observer){
+  observers_.RemoveObserver(observer);
 }
 
 base::FilePath AppShimHost::GetProfilePath() const {
@@ -81,6 +90,8 @@ void AppShimHost::OnLaunchApp(const base::FilePath& profile_dir,
     handler->OnShimLaunch(this, launch_type, files);
   // |handler| can only be NULL after AppShimHostManager is destroyed. Since
   // this only happens at shutdown, do nothing here.
+  
+  FOR_EACH_OBSERVER(apps::AppShimHostObserver, observers_, AppShimLaunched(this));
 }
 
 void AppShimHost::OnFocus(apps::AppShimFocusType focus_type,
@@ -113,6 +124,7 @@ void AppShimHost::OnAppLaunchComplete(apps::AppShimLaunchResult result) {
 }
 
 void AppShimHost::OnAppClosed() {
+  FOR_EACH_OBSERVER(apps::AppShimHostObserver, observers_, AppShimClosed(this));
   Close();
 }
 

@@ -28,6 +28,7 @@
         'extension_app_shim_handler_mac.h',
         'unix_domain_socket_acceptor.cc',
         'unix_domain_socket_acceptor.h',
+        'app_shim_host_observer.h'
       ],
     },
   ],  # targets

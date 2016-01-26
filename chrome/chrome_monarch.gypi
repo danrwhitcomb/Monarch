@@ -13,8 +13,8 @@
       'type': 'static_library',
       'dependencies': [
         '../base/base.gyp:base',
-        '../url/url.gyp:url_lib',
         '../content/content.gyp:content_browser',
+        '../content/content.gyp:content_common',
       ],
       'conditions': [],
       'sources': [
