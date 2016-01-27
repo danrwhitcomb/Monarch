@@ -48,11 +48,6 @@ class DynamicAppService : public RefcountedKeyedService,
 
   private:
     ~DynamicAppService() override;
-    
-    //AppShimHandlerHostObserver overrides
-    void AppShimLaunched(apps::AppShimHandler::Host* host) override;
-    void AppShimClosed(apps::AppShimHandler::Host* host) override;
-  
     std::map<std::string, scoped_refptr<DynamicApp>> apps_;
     ExtensionService* extension_service_;
     BrowserContext* browser_context_;

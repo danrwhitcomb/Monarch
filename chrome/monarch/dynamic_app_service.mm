@@ -49,7 +49,9 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
   monitor->AddObserver(this);
 }
 
-void DynamicAppService::ShutdownOnUIThread(){}
+void DynamicAppService::ShutdownOnUIThread(){
+  
+}
 
 DynamicAppService::~DynamicAppService(){}
 
@@ -70,7 +72,7 @@ void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
   
   OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_),
                                   extension, launch_container,
-                                  NEW_FOREGROUND_TAB, extensions::SOURCE_DYNAMIC_LAUNCH));
+                                  NEW_FOREGROUND_TAB, extensions::SOURCE_MANAGEMENT_API));
 }
 
 bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortcut_info){
