@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <map>
 
-#include "chrome/browser/apps/app_shim/app_shim_host_observer.h"
-#include "chrome/browser/apps/app_shim/app_shim_host_mac.h"
+#include "apps/app_lifetime_monitor.h"
+#include "apps/app_lifetime_monitor_factory.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
@@ -33,7 +33,7 @@ using namespace content;
 using namespace web_app;
 
 class DynamicAppService : public RefcountedKeyedService,
-                          public apps::AppShimHostObserver {
+                          public apps::AppLifetimeMonitor::Observer {
   public:
     //Handles dynamically creating and destroying
 
@@ -43,13 +43,15 @@ class DynamicAppService : public RefcountedKeyedService,
     bool BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortcut_info);
     void DoUnpackedExtensionLoad(const base::FilePath& ext_path);
     void LaunchDynamicApp(const extensions::Extension* extension, const base::FilePath& file_path, const std::string& error);
+    
+    void OnAppStart(Profile* profile, const std::string& app_id) override;
 
   private:
     ~DynamicAppService() override;
     
-    //AppShimHostObserver overrides
-    void AppShimLaunched(AppShimHost* host) override;
-    void AppShimClosed(AppShimHost* host) override;
+    //AppShimHandlerHostObserver overrides
+    void AppShimLaunched(apps::AppShimHandler::Host* host) override;
+    void AppShimClosed(apps::AppShimHandler::Host* host) override;
   
     std::map<std::string, scoped_refptr<DynamicApp>> apps_;
     ExtensionService* extension_service_;

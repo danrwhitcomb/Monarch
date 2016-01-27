@@ -3,6 +3,9 @@
 // found in the LICENSE file.
 #import <Foundation/Foundation.h>
 
+#include "apps/app_lifetime_monitor.h"
+#include "apps/app_lifetime_monitor_factory.h"
+
 #include "extensions/common/manifest_handlers/file_handler_info.h"
 #include "chrome/monarch/dynamic_app.h"
 #include "chrome/monarch/monarch_util.h"
@@ -16,8 +19,6 @@
 #include "chrome/browser/extensions/launch_util.h"
 #include "chrome/browser/ui/extensions/application_launch.h"
 #include "chrome/browser/ui/extensions/app_launch_params.h"
-#include "chrome/browser/apps/app_shim/app_shim_host_observer.h"
-#include "chrome/browser/apps/app_shim/app_shim_host_mac.h"
 
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/browser_thread.h"
@@ -39,7 +40,14 @@ using content::BrowserThread;
 
 DynamicAppService::DynamicAppService(BrowserContext* context):
   extension_service_(extensions::ExtensionSystem::Get(context)->extension_service()),
-  browser_context_(context){}
+  browser_context_(context){
+  
+  apps::AppLifetimeMonitor* monitor =
+    apps::AppLifetimeMonitorFactory::
+    GetForProfile(Profile::FromBrowserContext(context));
+    
+  monitor->AddObserver(this);
+}
 
 void DynamicAppService::ShutdownOnUIThread(){}
 
@@ -87,12 +95,7 @@ bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortc
   return true;
 }
 
-void DynamicAppService::AppShimLaunched(AppShimHost* host){
-  int i = 1;
-  i += 1;
-}
-
-void DynamicAppService::AppShimClosed(AppShimHost* host){
+void DynamicAppService::OnAppStart(Profile* profile, const std::string& app_id){
   int i = 1;
   i += 1;
 }
