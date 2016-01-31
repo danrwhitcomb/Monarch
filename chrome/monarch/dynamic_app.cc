@@ -102,6 +102,7 @@ void DynamicApp::SetupMockExtension(){
   
 }
 
+
 bool DynamicApp::ReplaceBackgroundJSData(){
   std::map<std::string, std::string> injections;
   injections[kAppID]  = GetExtensionID();

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F1077" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1509" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
         <development version="5100" identifier="xcode"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="BrowserCrApplication"/>
@@ -347,6 +347,12 @@ CA
                                     <action selector="commandDispatch:" target="-1" id="693"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="^IDS_ENTER_APP_MODE_MAC" tag="35012" keyEquivalent="A" id="699">
+                              <connections>
+                                <action selector="commandDispatch:" target="-1" id="546"/>
+                              </connections>
+                            </menuItem>
+                            
                             <menuItem title="^IDS_TEXT_DEFAULT_MAC" tag="38002" keyEquivalent="0" id="460">
                                 <connections>
                                     <action selector="commandDispatch:" target="-1" id="556"/>

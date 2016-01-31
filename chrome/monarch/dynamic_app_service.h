@@ -44,14 +44,22 @@ class DynamicAppService : public RefcountedKeyedService,
     void DoUnpackedExtensionLoad(const base::FilePath& ext_path);
     void LaunchDynamicApp(const extensions::Extension* extension, const base::FilePath& file_path, const std::string& error);
     
+    DynamicApp* GetAppWithID(const std::string& app_id);
+    void UninstallApp(const std::string& app_id, const base::FilePath& extension_path);
+                  
+    
     void OnAppStart(Profile* profile, const std::string& app_id) override;
+    void OnAppStop(Profile* profile, const std::string& app_id) override;
+    
 
   private:
+  
+    void DeleteExtensionFiles(const base::FilePath& extension_path);
+  
     ~DynamicAppService() override;
     std::map<std::string, scoped_refptr<DynamicApp>> apps_;
     ExtensionService* extension_service_;
     BrowserContext* browser_context_;
-
 };
   
 } //namespace monarch

@@ -12754,6 +12754,9 @@ Some features may be unavailable.  Please check that the profile exists and you 
         <message name="IDS_EXIT_PRESENTATION_MAC" desc="The Mac menu item to leave presentation mode in the view menu.">
           Exit Presentation Mode
         </message>
+        <message name="IDS_ENTER_APP_MODE_MAC" desc="The Mac menu item to open the page in an app shim">
+          Enter App Mode
+        </message>
         <message name="IDS_TEXT_BIGGER_MAC" desc="The Mac menu item to zoom in on the page in the view menu.">
           Zoom In
         </message>

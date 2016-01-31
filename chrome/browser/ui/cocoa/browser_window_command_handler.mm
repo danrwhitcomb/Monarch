@@ -167,6 +167,13 @@ Browser* FindBrowserForSender(id sender, NSWindow* window) {
       }
       break;
     }
+    
+    case IDC_ENTER_DYNAMIC_APP: {
+      NSMenuItem* menuItem = base::mac::ObjCCast<NSMenuItem>(item);
+      [menuItem setHidden:NO];
+      break;
+    }
+    
     case IDC_SHOW_SIGNIN: {
       Profile* original_profile = browser->profile()->GetOriginalProfile();
       [AppController updateSigninItem:item

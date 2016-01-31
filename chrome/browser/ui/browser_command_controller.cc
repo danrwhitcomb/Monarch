@@ -1043,6 +1043,9 @@ void BrowserCommandController::InitCommandState() {
   command_updater_.UpdateCommandEnabled(
       IDC_DISTILL_PAGE, base::CommandLine::ForCurrentProcess()->HasSwitch(
                             switches::kEnableDomDistiller));
+  
+  // Enter App Mode
+  command_updater_.UpdateCommandEnabled(IDC_ENTER_DYNAMIC_APP, true);
 
   // Initialize other commands whose state changes based on various conditions.
   UpdateCommandsForFullscreenMode();

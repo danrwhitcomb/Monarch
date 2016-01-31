@@ -977,6 +977,12 @@ class AppControllerProfileObserver : public ProfileInfoCacheObserver {
                            currentProfile:lastProfile];
           break;
         }
+        
+        //Should not be able to make an app from no window
+        case IDC_ENTER_DYNAMIC_APP:
+          enable = NO;
+          break;
+          
 #if defined(GOOGLE_CHROME_BUILD)
         case IDC_FEEDBACK:
           enable = NO;
