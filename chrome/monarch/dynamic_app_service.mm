@@ -8,6 +8,7 @@
 
 #include "extensions/common/manifest_handlers/file_handler_info.h"
 #include "chrome/monarch/dynamic_app.h"
+#include "chrome/monarch/dynamic_app_service_factory.h"
 #include "chrome/monarch/monarch_util.h"
 #include "chrome/common/chrome_constants.h"
 #include "chrome/browser/profiles/profile.h"
@@ -56,9 +57,17 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
   monitor->AddObserver(this);
 }
 
-void DynamicAppService::ShutdownOnUIThread(){
-  
+//static
+void DynamicAppService::LaunchAppWithContents(WebContents* contents){
+
+  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(contents);
+  scoped_refptr<monarch_app::DynamicAppService> service =
+    monarch_app::DynamicAppServiceFactory::GetForContext(contents->GetBrowserContext());
+  service->BuildAppFromTab(std::move(info));
 }
+
+
+void DynamicAppService::ShutdownOnUIThread(){}
 
 DynamicAppService::~DynamicAppService(){}
 

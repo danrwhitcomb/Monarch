@@ -37,6 +37,8 @@ class DynamicAppService : public RefcountedKeyedService,
   public:
     //Handles dynamically creating and destroying
 
+    static void LaunchAppWithContents(WebContents* contents);
+                            
     DynamicAppService(BrowserContext* context);
     void ShutdownOnUIThread() override;
   
