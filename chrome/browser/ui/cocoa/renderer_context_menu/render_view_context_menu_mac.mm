@@ -11,6 +11,7 @@
 #include "base/tracked_objects.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/extensions/extension_service.h"
+#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/grit/generated_resources.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
@@ -225,10 +226,15 @@ bool RenderViewContextMenuMac::IsCommandIdEnabled(int command_id) const {
       return view && view->IsSpeaking();
     }
 			
-    case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE:
-        //For now always true. When dev support happens, more logic to be added
-        return true;
-
+    case IDC_CONTENT_CONTEXT_ENTERDYNAPPMODE: {
+      Browser* browser = chrome::FindBrowserWithWebContents(source_web_contents_);
+      if(browser){
+        return !browser->is_app();
+      } else {
+        return false;
+      }
+    }
+    
     case IDC_WRITING_DIRECTION_DEFAULT:  // Provided to match OS defaults.
       return params_.writing_direction_default &
           blink::WebContextMenuData::CheckableMenuItemEnabled;
@@ -335,11 +341,7 @@ void RenderViewContextMenuMac::UpdateToolkitMenuItem(
 }
 
 void RenderViewContextMenuMac::CreateDynamicApp(){
-  WebContents* web_contents = GetWebContents();
-  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(web_contents);
-  scoped_refptr<monarch_app::DynamicAppService> service = monarch_app::DynamicAppServiceFactory::GetForContext(web_contents->GetBrowserContext());
-  
-  service->BuildAppFromTab(std::move(info));
+  monarch_app::DynamicAppService::LaunchAppWithContents(source_web_contents_);
 }
 
 void RenderViewContextMenuMac::AppendBidiSubMenu() {

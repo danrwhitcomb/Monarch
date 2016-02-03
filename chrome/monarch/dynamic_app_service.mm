@@ -64,6 +64,7 @@ void DynamicAppService::LaunchAppWithContents(WebContents* contents){
   scoped_refptr<monarch_app::DynamicAppService> service =
     monarch_app::DynamicAppServiceFactory::GetForContext(contents->GetBrowserContext());
   service->BuildAppFromTab(std::move(info));
+  contents->Close();
 }
 
 
