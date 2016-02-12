@@ -31,47 +31,61 @@ base::string16 StringToString16(std::string& s){
 
 bool ReplaceKeysInFile(std::map<std::string, std::string> map, base::FilePath& file){
   
-  typedef std::map<std::string, std::string>::iterator it_type;
-  for(it_type iterator = map.begin(); iterator != map.end(); iterator++){
     std::ifstream in(file.MaybeAsASCII().c_str());
-    std::ofstream out(file.MaybeAsASCII().c_str(), std::ofstream::in | std::ofstream::out);
-    ReplaceKeyWithWordInFile(in, out, iterator->first, iterator->second);
+    std::string result = ReplaceKeysWithWordsInFile(in, map);
     in.close();
-    out.close();
-  }
+  
+    if(!result.empty()){
+      std::ofstream out(file.MaybeAsASCII().c_str());
+      
+      if(out.fail())
+        return false;
+      
+      out << result;
+      out.close();
+      
+    } else {
+      return false;
+    }
   
   return true;
 }
 
-bool ReplaceKeyWithWordInFile(std::ifstream& in, std::ofstream& out, std::string wordToReplace, std::string wordToReplaceWith){
+std::string ReplaceKeysWithWordsInFile(std::ifstream& in, std::map<std::string, std::string> map){
   
   if (in.fail())
   {
-    return false;
-  }
-  
-  if (out.fail())
-  {
-    return false;
+    return std::string();
   }
   
   std::string line;
-  size_t len = wordToReplace.length();
-  while (std::getline(in, line))
-  {
-    while (true)
-    {
-      size_t pos = line.find(wordToReplace);
-      if (pos != std::string::npos)
-        line.replace(pos, len, wordToReplaceWith);
-      else
-        break;
+  std::string result;
+  typedef std::map<std::string, std::string>::iterator it_type;
+  
+  while (std::getline(in, line)){
+  
+    for(it_type iterator = map.begin(); iterator != map.end(); iterator++){
+    
+      //Run through all keys and see if they're in the line
+      std::string wordToReplace = iterator->first;
+      std::string wordToReplaceWith = iterator->second;
+      size_t len = wordToReplace.length();
+      
+      //Replace every instance of this key in this line with its val
+      while(true){
+        size_t pos = line.find(wordToReplace);
+        if (pos != std::string::npos)
+          line.replace(pos, len, wordToReplaceWith);
+        else
+          break;
+      }
+
     }
     
-    out << line << '\n';
+    result += line + "\n";
   }
   
-  return true;
+  return result;
 }
 
 base::FilePath GetTempAppDirectory(base::FilePath& profile_path){

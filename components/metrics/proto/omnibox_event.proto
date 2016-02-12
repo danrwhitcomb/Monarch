@@ -226,6 +226,7 @@ message OmniboxEventProto {
                                     // suggestions of any type.
       CALCULATOR              = 23; // A calculator answer.
       CLIPBOARD               = 24; // An URL based on the clipboard.
+      URL_WHAT_YOU_TYPED_APP  = 25; // A match allowing user to open site as an app
     }
     optional ResultType result_type = 2;
 

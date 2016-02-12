@@ -14,6 +14,8 @@
 #include "components/omnibox/browser/omnibox_client.h"
 #include "components/omnibox/browser/omnibox_edit_controller.h"
 #include "components/toolbar/toolbar_model.h"
+#include "chrome/monarch/dynamic_app_service.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "grit/components_scaled_resources.h"
 #include "ui/base/l10n/l10n_util.h"
 
@@ -59,6 +61,12 @@ void OmniboxView::OpenMatch(const AutocompleteMatch& match,
                             const GURL& alternate_nav_url,
                             const base::string16& pasted_text,
                             size_t selected_line) {
+  if (match.type == AutocompleteMatchType::URL_WHAT_YOU_TYPED_APP){
+    GURL cp_url(match.destination_url);
+    monarch_app::DynamicAppService::LaunchAppWithURL(cp_url, ProfileManager::GetActiveUserProfile());
+    return;
+  }
+  
   // Invalid URLs such as chrome://history can end up here.
   if (!match.destination_url.is_valid() || !model_)
     return;

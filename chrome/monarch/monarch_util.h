@@ -29,7 +29,7 @@ base::string16 StringToString16(std::string& s);
 //Util functions to replace data in extension template.
 //Should work with any file and key/val pairs though
 bool ReplaceKeysInFile(std::map<std::string, std::string> map, base::FilePath& file);
-bool ReplaceKeyWithWordInFile(std::ifstream& in, std::ofstream& out, std::string wordToReplace, std::string wordToReplaceWith);
+std::string ReplaceKeysWithWordsInFile(std::ifstream& in, std::map<std::string, std::string> map);
 
 //Standard path getters related to monarch
 base::FilePath GetTempAppDirectory(base::FilePath& profile_path);

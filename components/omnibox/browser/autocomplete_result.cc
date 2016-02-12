@@ -190,9 +190,10 @@ void AutocompleteResult::SortAndCull(
     const AutocompleteInput& input,
     const std::string& languages,
     TemplateURLService* template_url_service) {
-  for (ACMatches::iterator i(matches_.begin()); i != matches_.end(); ++i)
+  for (ACMatches::iterator i(matches_.begin()); i != matches_.end(); ++i){
+    if(i->type == AutocompleteMatchType::URL_WHAT_YOU_TYPED_APP) continue;
     i->ComputeStrippedDestinationURL(input, languages, template_url_service);
-
+  }
   DedupMatchesByDestination(input.current_page_classification(), true,
                             &matches_);
 

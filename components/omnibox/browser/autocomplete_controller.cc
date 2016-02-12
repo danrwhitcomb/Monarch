@@ -6,7 +6,9 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
+#include "url/GURL.h"
 #include "base/format_macros.h"
 #include "base/logging.h"
 #include "base/metrics/histogram.h"
@@ -426,6 +428,14 @@ void AutocompleteController::UpdateResult(
   result_.Validate();
 #endif
 
+#if defined(OS_MACOSX)
+  if(result_.size() > 0 && (result_.match_at(0)->type == AutocompleteMatchType::URL_WHAT_YOU_TYPED ||
+     result_.match_at(0)->type == AutocompleteMatchType::HISTORY_URL)){
+    AppendAppLaunchMatchBasedOn(result_.match_at(0));
+    result_.SortAndCull(input_, provider_client_->GetAcceptLanguages(), template_url_service_);
+  }
+#endif
+
   if (!done_) {
     // This conditional needs to match the conditional in Start that invokes
     // StartExpireTimer.
@@ -466,6 +476,20 @@ void AutocompleteController::UpdateResult(
     last_time_default_match_changed_ = base::TimeTicks::Now();
 
   NotifyChanged(force_notify_default_match_changed || notify_default_match);
+}
+
+void AutocompleteController::AppendAppLaunchMatchBasedOn(AutocompleteMatch* match){
+  AutocompleteMatch app_match(*match);
+  app_match.type = AutocompleteMatchType::URL_WHAT_YOU_TYPED_APP;
+  app_match.provider = NULL;
+  app_match.relevance -= 1;
+  app_match.allowed_to_be_default_match = false;
+  app_match.stripped_destination_url = GURL();
+  
+  std::vector<AutocompleteMatch> matches;
+  matches.push_back(app_match);
+  result_.AppendMatches(input_, matches);
+  
 }
 
 void AutocompleteController::UpdateAssociatedKeywords(

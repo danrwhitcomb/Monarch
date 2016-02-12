@@ -24,15 +24,18 @@
 
 #include "chrome/browser/ui/extensions/application_launch.h"
 #include "chrome/browser/ui/extensions/app_launch_params.h"
+#include "chrome/browser/ui/simple_message_box.h"
 
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/site_instance.h"
 
 #include "base/memory/scoped_ptr.h"
 #include "base/files/file_util.h"
 #include "base/files/file.h"
 #include "base/mac/foundation_util.h"
 #include "base/time/time.h"
+#include "base/strings/utf_string_conversions.h"
 #include "components/crx_file/id_util.h"
 
 #include "chrome/monarch/dynamic_app_service.h"
@@ -58,8 +61,19 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
 }
 
 //static
-void DynamicAppService::LaunchAppWithContents(WebContents* contents){
+void DynamicAppService::LaunchAppWithURL(GURL& url, BrowserContext* context){
+  //Make a fake shortcut_info b/c all we really need is the URL
+  scoped_ptr<ShortcutInfo> info(new ShortcutInfo());
+  info->url = url;
+  monarch_app::DynamicAppServiceFactory::GetForContext(context)->
+    BuildAppFromTab(std::move(info));
+}
 
+
+//static
+void DynamicAppService::LaunchAppWithContents(WebContents* contents){
+  
+  //Might as well get all the info we can from web_contents
   scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(contents);
   scoped_refptr<monarch_app::DynamicAppService> service =
     monarch_app::DynamicAppServiceFactory::GetForContext(contents->GetBrowserContext());
@@ -85,18 +99,25 @@ void DynamicAppService::DoUnpackedExtensionLoad(const base::FilePath& ext_path){
 void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
                                          const base::FilePath& file_path,
                                          const std::string& error){
-  
-  extensions::LaunchContainer launch_container =
+  if(error.empty()){
+    extensions::LaunchContainer launch_container =
     GetLaunchContainer(extensions::ExtensionPrefs::Get(browser_context_), extension);
-  
-  OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_),
-                                  extension, launch_container,
-                                  NEW_FOREGROUND_TAB, extensions::SOURCE_MANAGEMENT_API));
+    
+    OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_),
+                                    extension, launch_container,
+                                    NEW_FOREGROUND_TAB, extensions::SOURCE_MANAGEMENT_API));
+  }
 }
 
 bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortcut_info){
   
   //Shortcut info isn't required anywhere, but useful to hold necessary data
+  
+  if(!shortcut_info->url.is_valid()){
+    ShowErrorForURL(shortcut_info->url);
+    return false;
+  }
+  
   shortcut_info->profile_name = "First User";
   std::string name = web_app::GenerateApplicationNameFromURL(shortcut_info->url);
   shortcut_info->title = StringToString16(name);
@@ -127,6 +148,7 @@ void DynamicAppService::OnAppStop(Profile* profile, const std::string& app_id){
     base::FilePath extension_path = apps_[app_id]->GetExtensionPath();
     apps_.erase(app_id);
     
+    //Wait a few seconds to delete, else we might be destroying the wrong object
     content::BrowserThread::PostDelayedTask(content::BrowserThread::UI,
           FROM_HERE, base::Bind(&monarch_app::DynamicAppService::UninstallApp,
                                 this, app_id, extension_path), base::TimeDelta::FromSeconds(5));
@@ -144,11 +166,21 @@ void DynamicAppService::UninstallApp(const std::string& app_id, const base::File
 }
 
 void DynamicAppService::DeleteExtensionFiles(const base::FilePath& extension_path){
+  //Had to make this func b/c PostTask was having problems calling it directly
   base::DeleteFile(extension_path, true);
 }
 
 DynamicApp* DynamicAppService::GetAppWithID(const std::string& app_id){
   return apps_[app_id].get(); //Bet you can't guess what this does
+}
+
+void DynamicAppService::ShowErrorForURL(GURL& url){
+  std::string url_mesg("Unable to create a desktop app from the url: " + url.GetContent())
+  ;
+  
+  chrome::ShowMessageBox(NULL, string16(ASCIIToUTF16("Unable to Load App")),
+                         StringToString16(url_mesg),
+                         chrome::MESSAGE_BOX_TYPE_WARNING);
 }
 
 

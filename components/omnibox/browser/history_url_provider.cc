@@ -509,9 +509,9 @@ void HistoryURLProvider::Start(const AutocompleteInput& input,
   // URL DB; otherwise, we'll replace this match lower down.  Don't do this for
   // queries, though -- while we can sometimes mark up a match for them, it's
   // not what the user wants, and just adds noise.
-  if (fixed_up_input.type() != metrics::OmniboxInputType::QUERY)
+  if (fixed_up_input.type() != metrics::OmniboxInputType::QUERY){
     matches_.push_back(what_you_typed_match);
-
+  }
   // We'll need the history service to run both passes, so try to obtain it.
   history::HistoryService* const history_service =
       client()->GetHistoryService();

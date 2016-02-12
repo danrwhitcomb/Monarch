@@ -15,5 +15,6 @@
     <structure type="chrome_scaled_image" name="IDR_LOCATION_BAR_HTTP" file="omnibox/location_bar_http.png" />
     <structure type="chrome_scaled_image" name="IDR_OMNIBOX_HTTP" file="omnibox/omnibox_http.png" />
     <structure type="chrome_scaled_image" name="IDR_OMNIBOX_SEARCH" file="omnibox/omnibox_search.png" />
+    <structure type="chrome_scaled_image" name="IDR_OMNIBOX_APP" file="omnibox/omnibox_app.png" />
   </if>
 </grit-part>

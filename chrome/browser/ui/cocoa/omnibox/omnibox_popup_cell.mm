@@ -435,6 +435,8 @@ NSAttributedString* CreateClassifiedAttributedString(
       base::mac::ObjCCastStrict<OmniboxPopupCellData>([self objectValue]);
   OmniboxPopupMatrix* tableView =
       base::mac::ObjCCastStrict<OmniboxPopupMatrix>(controlView);
+  
+  //Size calculations
   CGFloat remainingWidth = GetContentAreaWidth(cellFrame);
   CGFloat contentsWidth = [cellData getMatchContentsWidth];
   CGFloat separatorWidth = [[tableView separator] size].width;
@@ -447,6 +449,7 @@ NSAttributedString* CreateClassifiedAttributedString(
       !AutocompleteMatch::IsSearchType([cellData matchType]), &contentsMaxWidth,
       &descriptionMaxWidth);
 
+  //Rect setup
   NSRect imageRect = cellFrame;
   imageRect.size = [[cellData image] size];
   imageRect.origin.x += kImageXOffset;

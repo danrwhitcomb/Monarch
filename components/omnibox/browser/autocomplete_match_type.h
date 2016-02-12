@@ -51,6 +51,7 @@ struct AutocompleteMatchType {
     VOICE_SUGGEST               = 20,  // An Android-specific type which
                                        // indicates a search from voice
                                        // recognizer.
+    URL_WHAT_YOU_TYPED_APP          = 21,
     NUM_TYPES,
   };
 

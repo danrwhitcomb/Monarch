@@ -38,6 +38,7 @@ class DynamicAppService : public RefcountedKeyedService,
     //Handles dynamically creating and destroying
 
     static void LaunchAppWithContents(WebContents* contents);
+    static void LaunchAppWithURL(GURL& url, BrowserContext* context);
                             
     DynamicAppService(BrowserContext* context);
     void ShutdownOnUIThread() override;
@@ -57,6 +58,7 @@ class DynamicAppService : public RefcountedKeyedService,
   private:
   
     void DeleteExtensionFiles(const base::FilePath& extension_path);
+    void ShowErrorForURL(GURL& url);
   
     ~DynamicAppService() override;
     std::map<std::string, scoped_refptr<DynamicApp>> apps_;

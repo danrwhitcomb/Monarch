@@ -117,6 +117,8 @@ class AutocompleteController : public AutocompleteProviderListener {
   void UpdateMatchDestinationURL(
       const TemplateURLRef::SearchTermsArgs& search_terms_args,
       AutocompleteMatch* match) const;
+  
+  void AppendAppLaunchMatchBasedOn(AutocompleteMatch* match);
 
   HistoryURLProvider* history_url_provider() const {
     return history_url_provider_;
