@@ -68,6 +68,12 @@ class Manifest {
     // New enum values must go above here.
     NUM_LOAD_TYPES
   };
+  
+  //Differentiates between dynamically created and installed extensions
+  enum Lifespan {
+    LIFE_INSTALLED,
+    LIFE_DYNAMIC
+  };
 
   // Given two install sources, return the one which should take priority
   // over the other. If an extension is installed from two sources A and B,
@@ -116,6 +122,7 @@ class Manifest {
   }
 
   Manifest(Location location, scoped_ptr<base::DictionaryValue> value);
+
   virtual ~Manifest();
 
   const std::string& extension_id() const { return extension_id_; }
@@ -149,6 +156,7 @@ class Manifest {
   }
   bool is_extension() const { return type_ == TYPE_EXTENSION; }
   bool is_shared_module() const { return type_ == TYPE_SHARED_MODULE; }
+  bool is_lifespan_dynamic() const { return lifespan_ == LIFE_DYNAMIC; }
 
   // These access the wrapped manifest value, returning false when the property
   // does not exist or if the manifest type can't access it.
@@ -193,6 +201,7 @@ class Manifest {
   scoped_ptr<base::DictionaryValue> value_;
 
   Type type_;
+  Lifespan lifespan_;
 
   DISALLOW_COPY_AND_ASSIGN(Manifest);
 };

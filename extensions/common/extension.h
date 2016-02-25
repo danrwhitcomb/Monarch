@@ -302,6 +302,8 @@ class Extension : public base::RefCountedThreadSafe<Extension> {
   const std::string& name() const { return name_; }
   const std::string& short_name() const { return short_name_; }
   const std::string& non_localized_name() const { return non_localized_name_; }
+  const GURL GetDynamicURL() const;
+  
   // Base64-encoded version of the key used to sign this extension.
   // In pseudocode, returns
   // base::Base64Encode(RSAPrivateKey(pem_file).ExportPublicKey()).
@@ -360,6 +362,7 @@ class Extension : public base::RefCountedThreadSafe<Extension> {
   bool is_extension() const;
   bool is_shared_module() const;
   bool is_theme() const;
+  bool is_lifespan_dynamic() const;
 
   void AddWebExtentPattern(const URLPattern& pattern);
   const URLPatternSet& web_extent() const { return extent_; }

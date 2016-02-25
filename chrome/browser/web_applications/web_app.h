@@ -16,6 +16,10 @@
 #include "chrome/browser/shell_integration.h"
 #include "chrome/common/web_application_info.h"
 #include "extensions/common/manifest_handlers/file_handler_info.h"
+#include "components/favicon_base/favicon_types.h"
+#include "extensions/browser/image_loader.h"
+
+
 
 class Profile;
 
@@ -102,7 +106,7 @@ struct ShortcutLocations {
 // case is implementation specific.
 enum ShortcutCreationReason {
   SHORTCUT_CREATION_BY_USER,
-  SHORTCUT_CREATION_AUTOMATED,
+  SHORTCUT_CREATION_AUTOMATED
 };
 
 // Called by GetInfoForApp after fetching the ShortcutInfo and FileHandlersInfo.
@@ -134,6 +138,15 @@ scoped_ptr<ShortcutInfo> ShortcutInfoForExtensionAndProfile(
 void GetInfoForApp(const extensions::Extension* extension,
                    Profile* profile,
                    const InfoCallback& callback);
+  
+void FaviconHasLoaded(scoped_ptr<ShortcutInfo> shortcut_info,
+                      const extensions::FileHandlersInfo file_handlers_info,
+                      const web_app::InfoCallback callback,
+                      const extensions::Extension* extension,
+                      Profile* profile,
+                      const favicon_base::FaviconImageResult& result);
+  
+void GetIconForExtension(const extensions::Extension* extension, std::vector<extensions::ImageLoader::ImageRepresentation>& info_list);
 
 // Populates a ShortcutInfo for the given |extension| in |profile| and passes
 // it to |callback| after asynchronously loading all icon representations. This

@@ -40,6 +40,8 @@ extern const char kDescription[];
 extern const char kDevToolsPage[];
 extern const char kDisplayInLauncher[];
 extern const char kDisplayInNewTabPage[];
+extern const char kDynamic[];
+extern const char kDynamicURL[];
 extern const char kEventName[];
 extern const char kExcludeGlobs[];
 extern const char kExcludeMatches[];

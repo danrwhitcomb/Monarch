@@ -66,6 +66,10 @@ std::string DynamicApp::GetPlainAppURL(){
   return shortcut_info_->url.spec();
 }
 
+GURL DynamicApp::GetURL(){
+  return shortcut_info_->url;
+}
+
 web_app::ShortcutInfo* DynamicApp::GetShortcutInfo(){
   return shortcut_info_.get();
 }
@@ -99,7 +103,6 @@ void DynamicApp::SetupMockExtension(){
   ReplaceHTMLData();
   ReplaceManifestData();
   ReplaceBackgroundJSData();
-  
 }
 
 
@@ -116,6 +119,8 @@ bool DynamicApp::ReplaceBackgroundJSData(){
 bool DynamicApp::ReplaceManifestData(){
   std::map<std::string, std::string> map;
   map[kAppName] = GetAppName();
+  map[kAppURL] = GetPlainAppURL();
+  
   base::FilePath path = GetExtensionPath().Append("1.0_0").Append("manifest.json");
   
   if(!ReplaceKeysInFile(map, path))

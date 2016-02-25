@@ -401,6 +401,17 @@ const std::string Extension::GetVersionForDisplay() const {
   return VersionString();
 }
 
+const GURL Extension::GetDynamicURL() const {
+  if(manifest_->HasKey(keys::kDynamicURL)){
+    std::string url;
+    manifest_->GetString(keys::kDynamicURL, &url);
+    return GURL(url);
+  }
+  
+  return GURL();
+}
+
+
 void Extension::AddInstallWarning(const InstallWarning& new_warning) {
   install_warnings_.push_back(new_warning);
 }
@@ -437,6 +448,10 @@ bool Extension::is_shared_module() const {
 
 bool Extension::is_theme() const {
   return manifest()->is_theme();
+}
+
+bool Extension::is_lifespan_dynamic() const {
+  return manifest()->is_lifespan_dynamic();
 }
 
 void Extension::AddWebExtentPattern(const URLPattern& pattern) {

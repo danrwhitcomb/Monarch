@@ -99,7 +99,10 @@ void DynamicAppService::DoUnpackedExtensionLoad(const base::FilePath& ext_path){
 void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
                                          const base::FilePath& file_path,
                                          const std::string& error){
+  
   if(error.empty()){
+  
+    //Launch app
     extensions::LaunchContainer launch_container =
     GetLaunchContainer(extensions::ExtensionPrefs::Get(browser_context_), extension);
     
@@ -120,7 +123,7 @@ bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortc
   
   shortcut_info->profile_name = "First User";
   std::string name = web_app::GenerateApplicationNameFromURL(shortcut_info->url);
-  shortcut_info->title = StringToString16(name);
+  shortcut_info->title = base::UTF8ToUTF16(name);
   
   //Throw all app related info in its own class
   scoped_refptr<DynamicApp> app_ptr =
@@ -129,8 +132,8 @@ bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortc
   
   //Move everything into place on the FILE thread, then install
   content::BrowserThread::PostTaskAndReply(content::BrowserThread::FILE, FROM_HERE,
-                                           base::Bind(&monarch_app::DynamicApp::SetupMockExtension, app_ptr),
-                                           base::Bind(&monarch_app::DynamicAppService::DoUnpackedExtensionLoad, this, app_ext_dir));
+      base::Bind(&monarch_app::DynamicApp::SetupMockExtension, app_ptr),
+      base::Bind(&monarch_app::DynamicAppService::DoUnpackedExtensionLoad, this, app_ext_dir));
 
   //Save the DynamicApp
   apps_.insert(std::pair<std::string, scoped_refptr<DynamicApp>>(app_ptr->GetExtensionID(), std::move(app_ptr)));
@@ -138,7 +141,7 @@ bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortc
   return true;
 }
 
-//Might need this in the future
+//Probably useful in the future
 void DynamicAppService::OnAppStart(Profile* profile, const std::string& app_id){}
 
 void DynamicAppService::OnAppStop(Profile* profile, const std::string& app_id){
@@ -151,7 +154,7 @@ void DynamicAppService::OnAppStop(Profile* profile, const std::string& app_id){
     //Wait a few seconds to delete, else we might be destroying the wrong object
     content::BrowserThread::PostDelayedTask(content::BrowserThread::UI,
           FROM_HERE, base::Bind(&monarch_app::DynamicAppService::UninstallApp,
-                                this, app_id, extension_path), base::TimeDelta::FromSeconds(5));
+                                this, app_id, extension_path), base::TimeDelta::FromSeconds(1));
   }
 }
 
@@ -166,7 +169,7 @@ void DynamicAppService::UninstallApp(const std::string& app_id, const base::File
 }
 
 void DynamicAppService::DeleteExtensionFiles(const base::FilePath& extension_path){
-  //Had to make this func b/c PostTask was having problems calling it directly
+  //Had to make this func b/c PostTask was having problems calling it directly... I think parameters need to be const to be able to Post Task it
   base::DeleteFile(extension_path, true);
 }
 

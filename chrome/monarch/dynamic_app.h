@@ -12,7 +12,9 @@
 #include <stdio.h>
 #include <string>
 #include "base/files/file_path.h"
+
 #include "base/memory/ref_counted.h"
+#include "chrome/browser/profiles/profile.h"
 
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "base/memory/scoped_ptr.h"
@@ -32,12 +34,13 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
     std::string GetExtensionID();
     std::string GetAppName();
     std::string GetPlainAppURL();
+    GURL GetURL();
     base::FilePath GetExtensionPath();
     base::FilePath GetAppBundlePath();
     web_app::ShortcutInfo* GetShortcutInfo();
     bool CreateShortcut();
     void SetExtensionID(std::string extension_id);
-    
+  
   private:
     friend class base::RefCountedThreadSafe<DynamicApp>;
   

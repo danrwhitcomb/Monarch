@@ -13,6 +13,7 @@
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread.h"
+#include "base/task/cancelable_task_tracker.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/extensions/extension_ui_util.h"
 #include "chrome/browser/profiles/profile.h"
@@ -36,6 +37,12 @@
 #include "ui/gfx/image/image_family.h"
 #include "ui/gfx/image/image_skia.h"
 #include "url/url_constants.h"
+
+#include "chrome/browser/favicon/favicon_service_factory.h"
+#include "components/favicon/core/favicon_service.h"
+#include "components/favicon_base/favicon_callback.h"
+#include "components/favicon_base/favicon_types.h"
+#include "components/keyed_service/core/service_access_type.h"
 
 #if defined(OS_WIN)
 #include "ui/gfx/icon_util.h"
@@ -234,50 +241,95 @@ void GetInfoForApp(const extensions::Extension* extension,
       extensions::FileHandlers::GetFileHandlers(extension);
   extensions::FileHandlersInfo file_handlers_info =
       file_handlers ? *file_handlers : extensions::FileHandlersInfo();
+  
+  GURL url = extension->GetDynamicURL();
 
-  std::vector<extensions::ImageLoader::ImageRepresentation> info_list;
+  if(extension->is_lifespan_dynamic() && url.is_valid()){
+    //If the app is being built dynamically, then we want to try to get
+    //the favicon from the website, and if there isn't a favicon, then
+    //use the default base_ext icon
+    favicon::FaviconService* fav_service = FaviconServiceFactory::GetForProfile(profile, ServiceAccessType::EXPLICIT_ACCESS);
+    
+    //TODO: This will get leaked....
+    base::CancelableTaskTracker* tracker = new base::CancelableTaskTracker();
+    
+    fav_service->GetFaviconImageForPageURL(url, base::Bind(&web_app::FaviconHasLoaded, base::Passed(&shortcut_info), file_handlers_info, callback, extension, profile), tracker);
+    
+    
+  } else {
+    std::vector<extensions::ImageLoader::ImageRepresentation> info_list;
+    GetIconForExtension(extension, info_list);
+    // |info_list| may still be empty at this point, in which case
+    // LoadImageFamilyAsync will call the OnImageLoaded callback with an empty
+    // image and exit immediately.
+    extensions::ImageLoader::Get(profile)->LoadImageFamilyAsync(
+       extension, info_list, base::Bind(&OnImageLoaded, base::Passed(&shortcut_info), file_handlers_info, callback));
+  }
+}
+
+//This function is purely a callback for the GetInfoForApp
+//Function to see if the favicon coulbe loaded
+void FaviconHasLoaded(scoped_ptr<ShortcutInfo> shortcut_info,
+                 const extensions::FileHandlersInfo file_handlers_info,
+                 const web_app::InfoCallback callback,
+                 const extensions::Extension* extension,
+                 Profile* profile,
+                 const favicon_base::FaviconImageResult& result){
+
+
+  if(!result.image.IsEmpty()){
+    //Load the favicon as the icon:
+    gfx::ImageFamily icon_family;
+    icon_family.Add(result.image);
+    OnImageLoaded(std::move(shortcut_info), file_handlers_info, callback, icon_family);
+    
+  } else {
+    
+    //No favicon was found, so load the default extension favicon
+    std::vector<extensions::ImageLoader::ImageRepresentation> info_list;
+    GetIconForExtension(extension, info_list);
+    extensions::ImageLoader::Get(profile)->LoadImageFamilyAsync(
+      extension, info_list,
+      base::Bind(&OnImageLoaded, base::Passed(&shortcut_info), file_handlers_info, callback));
+
+  }
+
+}
+
+//Loads all available icons for extension into |info_list|
+void GetIconForExtension(const extensions::Extension* extension, std::vector<extensions::ImageLoader::ImageRepresentation>& info_list){
+
   for (size_t i = 0; i < kNumDesiredSizes; ++i) {
     int size = kDesiredSizes[i];
     extensions::ExtensionResource resource =
-        extensions::IconsInfo::GetIconResource(
-            extension, size, ExtensionIconSet::MATCH_EXACTLY);
+    extensions::IconsInfo::GetIconResource(
+      extension, size, ExtensionIconSet::MATCH_EXACTLY);
+    
     if (!resource.empty()) {
       info_list.push_back(extensions::ImageLoader::ImageRepresentation(
-          resource,
-          extensions::ImageLoader::ImageRepresentation::ALWAYS_RESIZE,
-          gfx::Size(size, size),
-          ui::SCALE_FACTOR_100P));
+        resource,extensions::ImageLoader::ImageRepresentation::ALWAYS_RESIZE,
+        gfx::Size(size, size),ui::SCALE_FACTOR_100P));
     }
   }
-
+  
   if (info_list.empty()) {
     size_t i = kNumDesiredSizes - 1;
     int size = kDesiredSizes[i];
-
+    
     // If there is no icon at the desired sizes, we will resize what we can get.
     // Making a large icon smaller is preferred to making a small icon larger,
     // so look for a larger icon first:
     extensions::ExtensionResource resource =
-        extensions::IconsInfo::GetIconResource(
-            extension, size, ExtensionIconSet::MATCH_BIGGER);
+    extensions::IconsInfo::GetIconResource(
+       extension, size, ExtensionIconSet::MATCH_BIGGER);
     if (resource.empty()) {
       resource = extensions::IconsInfo::GetIconResource(
-          extension, size, ExtensionIconSet::MATCH_SMALLER);
+       extension, size, ExtensionIconSet::MATCH_SMALLER);
     }
     info_list.push_back(extensions::ImageLoader::ImageRepresentation(
-        resource,
-        extensions::ImageLoader::ImageRepresentation::ALWAYS_RESIZE,
-        gfx::Size(size, size),
-        ui::SCALE_FACTOR_100P));
+      resource,extensions::ImageLoader::ImageRepresentation::ALWAYS_RESIZE,
+      gfx::Size(size, size), ui::SCALE_FACTOR_100P));
   }
-
-  // |info_list| may still be empty at this point, in which case
-  // LoadImageFamilyAsync will call the OnImageLoaded callback with an empty
-  // image and exit immediately.
-  extensions::ImageLoader::Get(profile)->LoadImageFamilyAsync(
-      extension, info_list,
-      base::Bind(&OnImageLoaded, base::Passed(&shortcut_info),
-                 file_handlers_info, callback));
 }
 
 void GetShortcutInfoForApp(const extensions::Extension* extension,

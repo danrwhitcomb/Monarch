@@ -109,9 +109,7 @@ Manifest::Location Manifest::GetHigherPriorityLocation(
 }
 
 Manifest::Manifest(Location location, scoped_ptr<base::DictionaryValue> value)
-    : location_(location),
-      value_(value.Pass()),
-      type_(TYPE_UNKNOWN) {
+    : location_(location), value_(std::move(value)), type_(TYPE_UNKNOWN){
   if (value_->HasKey(keys::kTheme)) {
     type_ = TYPE_THEME;
   } else if (value_->HasKey(keys::kExport)) {
@@ -129,6 +127,14 @@ Manifest::Manifest(Location location, scoped_ptr<base::DictionaryValue> value)
     type_ = TYPE_EXTENSION;
   }
   CHECK_NE(type_, TYPE_UNKNOWN);
+  
+  //Set lifespan
+  bool is_dynamic;
+  if (value_->HasKey(keys::kDynamic)) {
+    value_->GetBoolean(keys::kDynamic, &is_dynamic);
+    lifespan_ = is_dynamic ? LIFE_DYNAMIC : LIFE_INSTALLED;
+  }
+  
 }
 
 Manifest::~Manifest() {
