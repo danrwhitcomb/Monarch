@@ -27,59 +27,58 @@ const std::string kAppIcon128("%APP_ICON_128%");
 const std::string kAppURL("%APP_URL%");
 const std::string kAppID("%APP_ID%");
 
+DynamicApp::DynamicAppParams::DynamicAppParams(){}
+DynamicApp::DynamicAppParams::~DynamicAppParams(){}
 
-scoped_refptr<DynamicApp> DynamicApp::Create(scoped_ptr<ShortcutInfo> info, base::FilePath profile_path){
-    return scoped_refptr<DynamicApp>(new DynamicApp(std::move(info), profile_path));
+scoped_refptr<DynamicApp> DynamicApp::Create(const DynamicAppParams& params){
+    return scoped_refptr<DynamicApp>(new DynamicApp(params));
 }
 
-DynamicApp::DynamicApp(scoped_ptr<ShortcutInfo> info, base::FilePath profile_path):
-    shortcut_info_(std::move(info)),
-    profile_path_(profile_path)
-{
-  std::string name = String16ToString(shortcut_info_->title);
-  extension_dir_ = crx_file::id_util::GenerateId(name);
+DynamicApp::DynamicApp(const DynamicAppParams& params):
+  app_name_(params.app_name),
+  contents_(params.contents),
+  url_(params.url),
+  profile_path_(params.profile_path){
   
-  base::FilePath ext_dir = GetExtensionPath();
-  shortcut_info_->extension_id = crx_file::id_util::GenerateIdForPath(ext_dir.Append("1.0_0"));
+    FilePath dir = GetTempExtDirectory(profile_path_).Append(crx_file::id_util::GenerateId(app_name_));
+    extension_path_ = dir.Append("1.0_0");
+    
+    extension_id_ = crx_file::id_util::GenerateIdForPath(extension_path_);
+
+}
+  
+
+DynamicApp::~DynamicApp(){
+  if(contents_){
+    delete contents_;
+  }
 }
 
-DynamicApp::~DynamicApp(){}
+//Getters
+std::string DynamicApp::GetExtensionID(){ return extension_id_; }
+std::string DynamicApp::GetAppName(){ return app_name_; }
+content::WebContents* DynamicApp::GetWebContents(){ return contents_; }
+GURL DynamicApp::GetURL(){ return url_; }
 
-std::string DynamicApp::GetExtensionID(){
-  return shortcut_info_->extension_id;
-}
 
-std::string DynamicApp::GetAppName(){
-  return String16ToString(shortcut_info_->title);
-}
+std::string DynamicApp::GetPlainAppURL(){ return url_.spec(); }
 
-base::FilePath DynamicApp::GetExtensionPath(){
-  base::FilePath ext_path = GetTempExtDirectory(profile_path_);
-  return ext_path.Append(extension_dir_);
-}
 
+//Returns the path of where the app bundle should be
+//it is not guarenteed to exist
 base::FilePath DynamicApp::GetAppBundlePath(){
-  return GetTempAppDirectory(profile_path_).Append("_crx_" + GetExtensionID());
+  return GetTempAppDirectory(profile_path_).Append("_crx_" + GetExtensionID()).Append(GetAppName() + ".app");
 }
 
-std::string DynamicApp::GetPlainAppURL(){
-  return shortcut_info_->url.spec();
+//Returns path of the installed extension
+base::FilePath DynamicApp::GetExtensionPath(){
+  return extension_path_;
 }
 
-GURL DynamicApp::GetURL(){
-  return shortcut_info_->url;
-}
-
-web_app::ShortcutInfo* DynamicApp::GetShortcutInfo(){
-  return shortcut_info_.get();
-}
-
-void DynamicApp::SetExtensionID(std::string extension_id){
-  shortcut_info_->extension_id = extension_id;
-}
+void DynamicApp::SetExtensionID(std::string extension_id){ extension_id_ = extension_id; }
 
 bool DynamicApp::CopyBaseExtension(){
-  base::FilePath ext_dir = GetExtensionPath();
+  base::FilePath ext_dir = GetParentPath(GetExtensionPath());
   if(!base::DirectoryExists(ext_dir)){
     File::Error err = File::Error::FILE_OK;
     base::CreateDirectoryAndGetError(ext_dir, &err);
@@ -109,7 +108,7 @@ void DynamicApp::SetupMockExtension(){
 bool DynamicApp::ReplaceBackgroundJSData(){
   std::map<std::string, std::string> injections;
   injections[kAppID]  = GetExtensionID();
-  base::FilePath path = GetExtensionPath().Append("1.0_0").Append("background.js");
+  base::FilePath path = GetExtensionPath().Append("background.js");
   if(!ReplaceKeysInFile(injections, path))
     return false;
 
@@ -121,7 +120,7 @@ bool DynamicApp::ReplaceManifestData(){
   map[kAppName] = GetAppName();
   map[kAppURL] = GetPlainAppURL();
   
-  base::FilePath path = GetExtensionPath().Append("1.0_0").Append("manifest.json");
+  base::FilePath path = GetExtensionPath().Append("manifest.json");
   
   if(!ReplaceKeysInFile(map, path))
     return false;
@@ -133,26 +132,9 @@ bool DynamicApp::ReplaceHTMLData(){
   std::map<std::string, std::string> map;
   map[kAppName] = GetAppName();
   map[kAppURL] = GetPlainAppURL();
-  base::FilePath html_path = GetExtensionPath().Append("1.0_0").Append("main.html");
+  base::FilePath html_path = GetExtensionPath().Append("main.html");
   
   if(!ReplaceKeysInFile(map, html_path))
-    return false;
-  
-  return true;
-}
-
-bool DynamicApp::CreateShortcut(){
-
-  extensions::FileHandlersInfo file_handlers_info;
-  
-  web_app::WebAppShortcutCreator shortcut_builder(GetAppBundlePath(), shortcut_info_.get(), file_handlers_info);
-  
-  web_app::ShortcutLocations shortcut_location;
-  shortcut_location.on_desktop = false;
-  shortcut_location.applications_menu_location = web_app::ApplicationsMenuLocation::APP_MENU_LOCATION_HIDDEN;
-  shortcut_location.in_quick_launch_bar = true;
-  
-  if(!shortcut_builder.CreateShortcuts(web_app::ShortcutCreationReason::SHORTCUT_CREATION_AUTOMATED, shortcut_location))
     return false;
   
   return true;

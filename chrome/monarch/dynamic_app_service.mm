@@ -41,6 +41,9 @@
 #include "chrome/monarch/dynamic_app_service.h"
 
 
+namespace content{
+  class NavigationController;
+}
 
 namespace monarch_app {
 
@@ -62,11 +65,13 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
 
 //static
 void DynamicAppService::LaunchAppWithURL(GURL& url, BrowserContext* context){
-  //Make a fake shortcut_info b/c all we really need is the URL
-  scoped_ptr<ShortcutInfo> info(new ShortcutInfo());
-  info->url = url;
+
+  content::WebContents* web_contents(content::WebContents::Create(content::WebContents::CreateParams(context)));
+  content::NavigationController::LoadURLParams params(url);
+  web_contents->GetController().LoadURLWithParams(params);
+  
   monarch_app::DynamicAppServiceFactory::GetForContext(context)->
-    BuildAppFromTab(std::move(info));
+    BuildAppFromContents(web_contents);
 }
 
 
@@ -74,11 +79,11 @@ void DynamicAppService::LaunchAppWithURL(GURL& url, BrowserContext* context){
 void DynamicAppService::LaunchAppWithContents(WebContents* contents){
   
   //Might as well get all the info we can from web_contents
-  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(contents);
+//  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(contents);
   scoped_refptr<monarch_app::DynamicAppService> service =
     monarch_app::DynamicAppServiceFactory::GetForContext(contents->GetBrowserContext());
-  service->BuildAppFromTab(std::move(info));
-  contents->Close();
+  service->BuildAppFromContents(contents);
+  //contents->Close();
 }
 
 
@@ -101,40 +106,32 @@ void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
                                          const std::string& error){
   
   if(error.empty()){
+    
+    scoped_refptr<DynamicApp> app = apps_[extension->id()];
   
     //Launch app
     extensions::LaunchContainer launch_container =
     GetLaunchContainer(extensions::ExtensionPrefs::Get(browser_context_), extension);
     
-    OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_),
-                                    extension, launch_container,
-                                    NEW_FOREGROUND_TAB, extensions::SOURCE_MANAGEMENT_API));
+    OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_), app->GetWebContents(),
+        extension, launch_container, NEW_FOREGROUND_TAB,
+        extensions::SOURCE_MANAGEMENT_API));
   }
 }
 
-bool DynamicAppService::BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortcut_info){
+bool DynamicAppService::BuildAppFromContents(content::WebContents* contents){
+  DynamicApp::DynamicAppParams params;
+  params.app_name = GenerateAppNameFromURL(contents->GetURL());
+  params.contents = contents;
+  params.url = contents->GetURL();
+  params.profile_path = browser_context_->GetPath();
   
-  //Shortcut info isn't required anywhere, but useful to hold necessary data
+  scoped_refptr<DynamicApp> app_ptr = DynamicApp::Create(params);
   
-  if(!shortcut_info->url.is_valid()){
-    ShowErrorForURL(shortcut_info->url);
-    return false;
-  }
-  
-  shortcut_info->profile_name = "First User";
-  std::string name = web_app::GenerateApplicationNameFromURL(shortcut_info->url);
-  shortcut_info->title = base::UTF8ToUTF16(name);
-  
-  //Throw all app related info in its own class
-  scoped_refptr<DynamicApp> app_ptr =
-    DynamicApp::Create(std::move(shortcut_info), browser_context_->GetPath());
-  base::FilePath app_ext_dir = app_ptr->GetExtensionPath().Append("1.0_0");
-  
-  //Move everything into place on the FILE thread, then install
   content::BrowserThread::PostTaskAndReply(content::BrowserThread::FILE, FROM_HERE,
       base::Bind(&monarch_app::DynamicApp::SetupMockExtension, app_ptr),
-      base::Bind(&monarch_app::DynamicAppService::DoUnpackedExtensionLoad, this, app_ext_dir));
-
+      base::Bind(&monarch_app::DynamicAppService::DoUnpackedExtensionLoad, this, app_ptr->GetExtensionPath()));
+  
   //Save the DynamicApp
   apps_.insert(std::pair<std::string, scoped_refptr<DynamicApp>>(app_ptr->GetExtensionID(), std::move(app_ptr)));
   
@@ -155,6 +152,19 @@ void DynamicAppService::OnAppStop(Profile* profile, const std::string& app_id){
     content::BrowserThread::PostDelayedTask(content::BrowserThread::UI,
           FROM_HERE, base::Bind(&monarch_app::DynamicAppService::UninstallApp,
                                 this, app_id, extension_path), base::TimeDelta::FromSeconds(1));
+  }
+}
+
+void DynamicAppService::OnChromeTerminating(){
+  for(std::map<std::string, scoped_refptr<DynamicApp>>::iterator it = apps_.begin(); it != apps_.end();) {
+  
+    base::FilePath extension_path = it->second->GetExtensionPath();
+    std::string app_id = it->second->GetExtensionID();
+    apps_.erase(it++);
+    
+    if(base::PathExists(extension_path)){
+      UninstallApp(app_id, extension_path);
+    }
   }
 }
 
@@ -184,6 +194,20 @@ void DynamicAppService::ShowErrorForURL(GURL& url){
   chrome::ShowMessageBox(NULL, string16(ASCIIToUTF16("Unable to Load App")),
                          StringToString16(url_mesg),
                          chrome::MESSAGE_BOX_TYPE_WARNING);
+}
+
+std::string DynamicAppService::GenerateAppNameFromURL(const GURL& url){
+
+  std::string name;
+  if(url.has_host()){
+    std::string host = url.host();
+    name += host.substr(0, host.find("."));
+    name[0] = std::toupper(name[0]);
+  } else {
+    name = url.spec();
+  }
+  
+  return name;
 }
 
 

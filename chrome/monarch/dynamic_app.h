@@ -24,28 +24,49 @@ namespace monarch_app {
 class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
   public:
   
-    static scoped_refptr<DynamicApp> Create(scoped_ptr<web_app::ShortcutInfo> info, base::FilePath profile_path);
+    struct DynamicAppParams {
+    
+      DynamicAppParams();
+      ~DynamicAppParams();
+      
+      std::string app_name; // Display name for the application
+      content::WebContents* contents; //WebContents associated with app_shim. Not required
+      GURL url; // url of app
+      base::FilePath profile_path;
+    };
   
-    DynamicApp(scoped_ptr<web_app::ShortcutInfo> info, base::FilePath profile_path);
+    //Creaters
+    static scoped_refptr<DynamicApp> Create(const DynamicAppParams& params);
   
+    //Copying over the extension
     bool CopyBaseExtension();
     void SetupMockExtension();
   
+    //Getters
     std::string GetExtensionID();
     std::string GetAppName();
-    std::string GetPlainAppURL();
     GURL GetURL();
+    content::WebContents* GetWebContents();
+  
+    std::string GetPlainAppURL();
+  
+    //Path getters
     base::FilePath GetExtensionPath();
     base::FilePath GetAppBundlePath();
-    web_app::ShortcutInfo* GetShortcutInfo();
-    bool CreateShortcut();
     void SetExtensionID(std::string extension_id);
   
   private:
     friend class base::RefCountedThreadSafe<DynamicApp>;
   
-    scoped_ptr<web_app::ShortcutInfo> shortcut_info_;
-    std::string extension_dir_;
+    //constructors
+    DynamicApp(const DynamicAppParams& params);
+  
+    //Characteristic data
+    std::string app_name_;
+    std::string extension_id_;
+    content::WebContents* contents_;
+    GURL url_;
+    base::FilePath extension_path_;
     base::FilePath profile_path_;
   
     ~DynamicApp();

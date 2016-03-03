@@ -208,7 +208,7 @@ WebContents* OpenApplicationWindow(const AppLaunchParams& params,
       (extension ? ui::PAGE_TRANSITION_AUTO_BOOKMARK
                  : ui::PAGE_TRANSITION_AUTO_TOPLEVEL);
 
-  WebContents* web_contents =
+  WebContents* web_contents = params.contents ? params.contents :
       chrome::AddSelectedTabWithURL(browser, url, transition);
   web_contents->GetMutableRendererPrefs()->can_accept_load_drops = false;
   web_contents->GetRenderViewHost()->SyncRendererPrefs();

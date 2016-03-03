@@ -30,6 +30,25 @@ AppLaunchParams::AppLaunchParams(Profile* profile,
 }
 
 AppLaunchParams::AppLaunchParams(Profile* profile,
+                content::WebContents* contents,
+                const extensions::Extension* extension,
+                extensions::LaunchContainer container,
+                WindowOpenDisposition disposition,
+                extensions::AppLaunchSource source)
+    : profile(profile),
+      contents(contents),
+      extension_id(extension ? extension->id() : std::string()),
+      container(container),
+      disposition(disposition),
+      desktop_type(chrome::GetActiveDesktop()),
+      override_url(),
+      override_bounds(),
+      command_line(base::CommandLine::NO_PROGRAM),
+      source(source)
+{}
+
+
+AppLaunchParams::AppLaunchParams(Profile* profile,
                                  const extensions::Extension* extension,
                                  WindowOpenDisposition disposition,
                                  extensions::AppLaunchSource source)

@@ -22,8 +22,22 @@ namespace extensions {
 class Extension;
 }
 
+namespace content {
+class WebContents;
+}
+
 struct AppLaunchParams {
   AppLaunchParams(Profile* profile,
+                  const extensions::Extension* extension,
+                  extensions::LaunchContainer container,
+                  WindowOpenDisposition disposition,
+                  extensions::AppLaunchSource source);
+  
+  // Create params with webcontents to be injected into
+  // the frame. Using this will assume that |contents| holds
+  // the already instantiated contents of the app.
+  AppLaunchParams(Profile* profile,
+                  content::WebContents* contents,
                   const extensions::Extension* extension,
                   extensions::LaunchContainer container,
                   WindowOpenDisposition disposition,
@@ -50,6 +64,9 @@ struct AppLaunchParams {
 
   // The profile to load the application from.
   Profile* profile;
+  
+  // Possible injectable web contents for window
+  content::WebContents* contents;
 
   // The extension to load.
   std::string extension_id;
@@ -81,6 +98,7 @@ struct AppLaunchParams {
   // Record where the app is launched from for tracking purpose.
   // Different app may have their own enumeration of sources.
   extensions::AppLaunchSource source;
+  
 };
 
 #endif  // CHROME_BROWSER_UI_EXTENSIONS_APP_LAUNCH_PARAMS_H_

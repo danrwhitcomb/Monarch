@@ -108,4 +108,16 @@ base::FilePath GetBaseExtPath(){
         base::mac::NSToCFCast([NSString stringWithUTF8String:chrome::kBaseExtName]));
 }
 
+base::FilePath GetParentPath(const base::FilePath& path){
+  base::FilePath new_path("/");
+  std::vector<std::string> components;
+  path.GetComponents(&components);
+  
+  for(size_t i=1; i < components.size() - 1; i++){
+    new_path = new_path.Append(components[i]);
+  }
+  
+  return new_path;
+}
+
 }

@@ -37,6 +37,8 @@ base::FilePath GetTempExtDirectory(base::FilePath& profile_path);
 base::FilePath GetBaseExtPath();
 base::FilePath GetProfilePath();
 
+base::FilePath GetParentPath(const base::FilePath& path);
+
 }
 
 #endif /* monarch_util_h */

@@ -43,22 +43,29 @@ class DynamicAppService : public RefcountedKeyedService,
     DynamicAppService(BrowserContext* context);
     void ShutdownOnUIThread() override;
   
-    bool BuildAppFromTab(scoped_ptr<web_app::ShortcutInfo> shortcut_info);
-    void DoUnpackedExtensionLoad(const base::FilePath& ext_path);
-    void LaunchDynamicApp(const extensions::Extension* extension, const base::FilePath& file_path, const std::string& error);
+    bool BuildAppFromContents(content::WebContents* contents);
+    
+    void LaunchDynamicApp(const extensions::Extension* extension,
+                          const base::FilePath& file_path,
+                          const std::string& error);
     
     DynamicApp* GetAppWithID(const std::string& app_id);
-    void UninstallApp(const std::string& app_id, const base::FilePath& extension_path);
+    void UninstallApp(const std::string& app_id,
+                      const base::FilePath& extension_path);
                   
     
+    //AppLifetimeMonitor Overrides
     void OnAppStart(Profile* profile, const std::string& app_id) override;
     void OnAppStop(Profile* profile, const std::string& app_id) override;
+    void OnChromeTerminating() override;
     
 
   private:
   
+    void DoUnpackedExtensionLoad(const base::FilePath& ext_path);
     void DeleteExtensionFiles(const base::FilePath& extension_path);
     void ShowErrorForURL(GURL& url);
+    std::string GenerateAppNameFromURL(const GURL& url);
   
     ~DynamicAppService() override;
     std::map<std::string, scoped_refptr<DynamicApp>> apps_;
