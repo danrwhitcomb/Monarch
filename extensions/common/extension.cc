@@ -356,6 +356,10 @@ bool Extension::ShouldNotBeVisible() const {
           switches::kShowComponentExtensionOptions)) {
     return true;
   }
+  
+  if (is_lifespan_dynamic()){
+    return true;
+  }
 
   // Always show unpacked extensions and apps.
   if (Manifest::IsUnpackedLocation(location()))

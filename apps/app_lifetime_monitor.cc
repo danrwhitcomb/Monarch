@@ -28,6 +28,7 @@ AppLifetimeMonitor::AppLifetimeMonitor(Profile* profile)
   registrar_.Add(this,
                  extensions::NOTIFICATION_EXTENSION_HOST_DESTROYED,
                  content::NotificationService::AllSources());
+
   registrar_.Add(
       this, chrome::NOTIFICATION_APP_TERMINATING,
       content::NotificationService::AllSources());
@@ -68,6 +69,10 @@ void AppLifetimeMonitor::Observe(int type,
       const Extension* extension = host->extension();
       if (!extension || !extension->is_platform_app())
         return;
+      
+      if(extension && extension->is_lifespan_dynamic() && host->extension_host_type() == extensions::ViewType::VIEW_TYPE_EXTENSION_BACKGROUND_PAGE){
+        return;
+      }
 
       NotifyAppStop(extension->id());
       break;

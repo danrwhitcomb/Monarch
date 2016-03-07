@@ -67,9 +67,13 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
 void DynamicAppService::LaunchAppWithURL(GURL& url, BrowserContext* context){
 
   content::WebContents* web_contents(content::WebContents::Create(content::WebContents::CreateParams(context)));
-  content::NavigationController::LoadURLParams params(url);
-  web_contents->GetController().LoadURLWithParams(params);
   
+  //Setup loading params
+  content::NavigationController::LoadURLParams params(url);
+  params.can_load_local_resources = true;
+  
+  //Load url and build
+  web_contents->GetController().LoadURLWithParams(params);
   monarch_app::DynamicAppServiceFactory::GetForContext(context)->
     BuildAppFromContents(web_contents);
 }
@@ -82,14 +86,22 @@ void DynamicAppService::LaunchAppWithContents(WebContents* contents){
 //  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(contents);
   scoped_refptr<monarch_app::DynamicAppService> service =
     monarch_app::DynamicAppServiceFactory::GetForContext(contents->GetBrowserContext());
-  service->BuildAppFromContents(contents);
+  service->BuildAppFromContents(contents->Clone());
   //contents->Close();
 }
 
 
 void DynamicAppService::ShutdownOnUIThread(){}
 
-DynamicAppService::~DynamicAppService(){}
+DynamicAppService::~DynamicAppService(){
+  
+  //Remove observer from list
+  apps::AppLifetimeMonitor* monitor =
+    apps::AppLifetimeMonitorFactory::
+    GetForProfile(Profile::FromBrowserContext(browser_context_));
+
+  monitor->RemoveObserver(this);
+}
 
 void DynamicAppService::DoUnpackedExtensionLoad(const base::FilePath& ext_path){
   //Since the files aren't packed as extensions, we can load it as an unpacked extensions: UnpackedInstaller makes this easy
@@ -107,15 +119,18 @@ void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
   
   if(error.empty()){
     
-    scoped_refptr<DynamicApp> app = apps_[extension->id()];
+    std::string extension_id = extension->id();
+    scoped_refptr<DynamicApp> app = apps_[extension_id];
   
-    //Launch app
-    extensions::LaunchContainer launch_container =
-    GetLaunchContainer(extensions::ExtensionPrefs::Get(browser_context_), extension);
-    
-    OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_), app->GetWebContents(),
-        extension, launch_container, NEW_FOREGROUND_TAB,
-        extensions::SOURCE_MANAGEMENT_API));
+    if(app){
+      //Launch app
+      extensions::LaunchContainer launch_container =
+      GetLaunchContainer(extensions::ExtensionPrefs::Get(browser_context_), extension);
+      
+      OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_), app->GetWebContents(),
+                                      extension, launch_container, NEW_FOREGROUND_TAB,
+                                      extensions::SOURCE_MANAGEMENT_API));
+    }
   }
 }
 
@@ -149,9 +164,10 @@ void DynamicAppService::OnAppStop(Profile* profile, const std::string& app_id){
     apps_.erase(app_id);
     
     //Wait a few seconds to delete, else we might be destroying the wrong object
-    content::BrowserThread::PostDelayedTask(content::BrowserThread::UI,
-          FROM_HERE, base::Bind(&monarch_app::DynamicAppService::UninstallApp,
-                                this, app_id, extension_path), base::TimeDelta::FromSeconds(1));
+    UninstallApp(app_id, extension_path);
+//    content::BrowserThread::PostDelayedTask(content::BrowserThread::UI,
+//          FROM_HERE, base::Bind(&monarch_app::DynamicAppService::UninstallApp,
+//                                this, app_id, extension_path), base::TimeDelta::FromMilliseconds(1));
   }
 }
 
@@ -171,11 +187,15 @@ void DynamicAppService::OnChromeTerminating(){
 void DynamicAppService::UninstallApp(const std::string& app_id, const base::FilePath& extension_path){
 
   //Uninstall the extesion: Should unload the extension and remove the app shim bundle
-  ExtensionService::UninstallExtensionHelper(extension_service_, app_id, extensions::UninstallReason::UNINSTALL_REASON_COMPONENT_REMOVED);
-  
-  //Since the extension was originally unpacked, it won't delete the extension source directory. Do that here on the file thread.
-  content::BrowserThread::PostTask(content::BrowserThread::FILE, FROM_HERE, base::Bind(
-          &monarch_app::DynamicAppService::DeleteExtensionFiles, this, extension_path));
+  //Since this is pretty significantly delayed from the closing of the actual app,
+  //we have to make another check for the app in the map, in case the user has reopened
+  //the same page
+  if(apps_.find(app_id) == apps_.end()){
+    ExtensionService::UninstallExtensionHelper(extension_service_, app_id, extensions::UninstallReason::UNINSTALL_REASON_COMPONENT_REMOVED);
+    //Since the extension was originally unpacked, it won't delete the extension source directory. Do that here on the file thread.
+    content::BrowserThread::PostTask(content::BrowserThread::FILE, FROM_HERE, base::Bind(
+            &monarch_app::DynamicAppService::DeleteExtensionFiles, this, extension_path));
+  }
 }
 
 void DynamicAppService::DeleteExtensionFiles(const base::FilePath& extension_path){
