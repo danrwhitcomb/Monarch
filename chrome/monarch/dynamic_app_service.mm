@@ -93,15 +93,7 @@ void DynamicAppService::LaunchAppWithContents(WebContents* contents){
 
 void DynamicAppService::ShutdownOnUIThread(){}
 
-DynamicAppService::~DynamicAppService(){
-  
-  //Remove observer from list
-  apps::AppLifetimeMonitor* monitor =
-    apps::AppLifetimeMonitorFactory::
-    GetForProfile(Profile::FromBrowserContext(browser_context_));
-
-  monitor->RemoveObserver(this);
-}
+DynamicAppService::~DynamicAppService(){}
 
 void DynamicAppService::DoUnpackedExtensionLoad(const base::FilePath& ext_path){
   //Since the files aren't packed as extensions, we can load it as an unpacked extensions: UnpackedInstaller makes this easy
