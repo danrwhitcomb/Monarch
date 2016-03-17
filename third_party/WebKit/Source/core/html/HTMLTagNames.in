@@ -82,6 +82,8 @@ main interfaceName=HTMLElement
 map
 mark interfaceName=HTMLElement
 marquee
+mdamenu interfaceName=HTMLMDAMenuElement
+mdamenuitem interfaceName=HTMLMDAMenuItemElement
 menu
 menuitem interfaceName=HTMLMenuItemElement, runtimeEnabled=contextMenu
 meta
