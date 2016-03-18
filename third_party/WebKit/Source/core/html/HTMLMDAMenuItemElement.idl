@@ -20,4 +20,5 @@
 interface HTMLMDAMenuItemElement : HTMLElement {
     [Reflect] attribute DOMString title;
     [Reflect] attribute DOMString action;
+    [Reflect] attribute boolean disabled;
 };
