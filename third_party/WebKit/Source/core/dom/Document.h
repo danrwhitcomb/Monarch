@@ -514,6 +514,8 @@ public:
     const KURL& baseElementURL() const { return m_baseElementURL; }
     const AtomicString& baseTarget() const { return m_baseTarget; }
     void processBaseElement();
+    
+    void processMDAMenuElement(HTMLMDAMenuElement*);
 
     KURL completeURL(const String&) const;
     KURL completeURLWithOverride(const String&, const KURL& baseURLOverride) const;

@@ -51,7 +51,8 @@ namespace blink {
 //    if (insertionPoint->inDocument())
 //      document().processBaseElement();
 //  }
-//  
+//
+
   const String HTMLMDAMenuItemElement::action() const
   {
     return getAttribute(actionAttr);

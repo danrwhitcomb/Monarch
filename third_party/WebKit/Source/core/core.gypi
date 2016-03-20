@@ -2311,6 +2311,7 @@
             'dom/DecodedDataDocumentParser.cpp',
             'dom/DecodedDataDocumentParser.h',
             'dom/Document.cpp',
+            'dom/Document.h',
             'dom/DocumentEncodingData.cpp',
             'dom/DocumentEncodingData.h',
             'dom/DocumentFragment.cpp',

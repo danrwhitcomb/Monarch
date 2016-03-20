@@ -2983,6 +2983,11 @@ void Document::processBaseElement()
     m_baseTarget = target ? *target : nullAtom;
 }
 
+void Document::processMDAMenuElement(HTMLMDAMenuElement* menu){
+  //compile message data into structure
+  //send data
+}
+
 String Document::userAgent() const
 {
     return frame() ? frame()->loader().userAgent() : String();

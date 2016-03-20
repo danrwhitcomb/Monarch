@@ -32,7 +32,7 @@ class HTMLMDAMenuItemElement final : public HTMLElement {
     DECLARE_NODE_FACTORY(HTMLMDAMenuItemElement);
     
     const String action() const;
-    
+      
   private:
     explicit HTMLMDAMenuItemElement(Document&);
     

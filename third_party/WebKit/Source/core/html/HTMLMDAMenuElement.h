@@ -30,14 +30,16 @@ class HTMLMDAMenuElement final : public HTMLElement {
     DEFINE_WRAPPERTYPEINFO();
   public:
     DECLARE_NODE_FACTORY(HTMLMDAMenuElement);
-        
+  
+    bool isRootMenu();
+    HTMLMDAMenuElement* getRootMenuElement();
+  
   private:
     explicit HTMLMDAMenuElement(Document&);
 
-// Might want to keep these around for dynamics
-//    InsertionNotificationRequest insertedInto(ContainerNode*) override;
-//    void removedFrom(ContainerNode*) override;
-//    void childrenChanged(const ChildrenChange&) override;
+    InsertionNotificationRequest insertedInto(ContainerNode*) override;
+    void removedFrom(ContainerNode*) override;
+    void childrenChanged(const ChildrenChange&) override;
 };
   
 } // namespace blink

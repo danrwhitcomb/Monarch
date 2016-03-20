@@ -26,27 +26,55 @@
 #include "core/HTMLNames.h"
 #include "core/dom/Document.h"
 
+
 namespace blink {
   
   using namespace HTMLNames;
-  
+
   inline HTMLMDAMenuElement::HTMLMDAMenuElement(Document& document)
   : HTMLElement(mdamenuTag, document){}
   
-//  Node::InsertionNotificationRequest HTMLBaseElement::insertedInto(ContainerNode* insertionPoint)
-//  {
-//    HTMLElement::insertedInto(insertionPoint);
-//    if (insertionPoint->inDocument())
-//      document().processBaseElement();
-//    return InsertionDone;
-//  }
-//  
-//  void HTMLBaseElement::removedFrom(ContainerNode* insertionPoint)
-//  {
-//    HTMLElement::removedFrom(insertionPoint);
-//    if (insertionPoint->inDocument())
-//      document().processBaseElement();
-//  }
+  bool HTMLMDAMenuElement::isRootMenu(){
+    HTMLElement* parent = toHTMLElement(parentElement());
+    return !isHTMLMDAMenuElement(parent);
+  }
+  
+  HTMLMDAMenuElement* HTMLMDAMenuElement::getRootMenuElement(){
+  
+    //Check if current element is root
+    if(isRootMenu()){
+      return this;
+    }
+    
+    HTMLMDAMenuElement* element = toHTMLMDAMenuElement(parentElement());
+    
+    while(!element->isRootMenu()){
+      element = toHTMLMDAMenuElement(element->parentElement());
+    }
+    
+    return element;
+  }
+  
+  Node::InsertionNotificationRequest HTMLMDAMenuElement::insertedInto(ContainerNode* insertionPoint)
+  {
+    HTMLElement::insertedInto(insertionPoint);
+    if (insertionPoint->inDocument())
+      document().processMDAMenuElement(this);
+    return InsertionDone;
+  }
+  
+  void HTMLMDAMenuElement::removedFrom(ContainerNode* insertionPoint)
+  {
+    HTMLElement::removedFrom(insertionPoint);
+    if (insertionPoint->inDocument())
+      document().processMDAMenuElement(this);
+  }
+  
+  void HTMLMDAMenuElement::childrenChanged(const ChildrenChange& change)
+  {
+    HTMLElement::childrenChanged(change);
+    document().processMDAMenuElement(this);
+  }
 
   DEFINE_NODE_FACTORY(HTMLMDAMenuElement);
 }
