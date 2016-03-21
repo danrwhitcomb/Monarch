@@ -1,10 +1,7 @@
-//
-//  dynamic_app.cpp
-//  sources_for_indexing
-//
-//  Created by Dan Whitcomb on 12/20/15.
-//
-//
+// Copyright (c) 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include <string>
 #include <map>
 #include "base/files/file_path.h"
@@ -52,6 +49,10 @@ DynamicApp::~DynamicApp(){
   if(contents_){
     delete contents_;
   }
+}
+
+void DynamicApp::SetMenu(scoped_ptr<DynamicAppMenu> menu){
+  menu_.reset(menu.release());
 }
 
 //Getters

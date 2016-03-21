@@ -1,10 +1,6 @@
-//
-//  dynamic_app.hpp
-//  sources_for_indexing
-//
-//  Created by Dan Whitcomb on 12/20/15.
-//
-//
+// Copyright (c) 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef dynamic_app_h
 #define dynamic_app_h
@@ -17,6 +13,7 @@
 #include "chrome/browser/profiles/profile.h"
 
 #include "chrome/browser/web_applications/web_app_mac.h"
+#include "chrome/monarch/dynamic_app_menu.h"
 #include "base/memory/scoped_ptr.h"
 
 namespace monarch_app {
@@ -37,6 +34,8 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
   
     //Creaters
     static scoped_refptr<DynamicApp> Create(const DynamicAppParams& params);
+  
+    void SetMenu(scoped_ptr<DynamicAppMenu> menu);
   
     //Copying over the extension
     bool CopyBaseExtension();
@@ -68,6 +67,8 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
     GURL url_;
     base::FilePath extension_path_;
     base::FilePath profile_path_;
+    scoped_ptr<DynamicAppMenu> menu_;
+  
   
     ~DynamicApp();
   

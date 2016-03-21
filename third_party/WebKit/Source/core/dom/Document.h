@@ -121,6 +121,7 @@ class HTMLHeadElement;
 class HTMLImportLoader;
 class HTMLImportsController;
 class HTMLLinkElement;
+class HTMLMDAMenuElement;
 class HTMLScriptElement;
 class HitTestRequest;
 class IdleRequestCallback;
