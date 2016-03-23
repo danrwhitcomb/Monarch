@@ -946,6 +946,26 @@ void ParamTraits<LogData>::Log(const param_type& p, std::string* l) {
   // Doesn't make sense to implement this!
 }
 
+#if defined(OS_MACOSX)
+void ParamTraits<apps::MenuDTO>::Write(Message* m, const param_type& p){
+  WriteParam(m, p.title);
+  WriteParam(m, p.parent);
+  WriteParam(m, p.hasSubmenu);
+}
+
+bool ParamTraits<apps::MenuDTO>::Read(const Message* m, base::PickleIterator* iter, param_type* r){
+  return
+    ReadParam(m, iter, &r->title) &&
+    ReadParam(m, iter, &r->parent) &&
+    ReadParam(m, iter, &r->hasSubmenu);
+  
+}
+
+void ParamTraits<apps::MenuDTO>::Log(const param_type& p, std::string* l){
+  //meh
+}
+#endif
+
 void ParamTraits<Message>::Write(Message* m, const Message& p) {
 #if defined(OS_POSIX)
   // We don't serialize the file descriptors in the nested message, so there

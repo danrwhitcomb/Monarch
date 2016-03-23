@@ -48,6 +48,7 @@ bool AppShimHost::OnMessageReceived(const IPC::Message& message) {
     IPC_MESSAGE_HANDLER(AppShimHostMsg_FocusApp, OnFocus)
     IPC_MESSAGE_HANDLER(AppShimHostMsg_SetAppHidden, OnSetHidden)
     IPC_MESSAGE_HANDLER(AppShimHostMsg_QuitApp, OnQuit)
+    IPC_MESSAGE_HANDLER(AppShimHostMsg_MenuItemSelected, OnMenuItemSelected)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -126,6 +127,10 @@ void AppShimHost::OnAppUnhideWithoutActivation() {
 
 void AppShimHost::OnAppRequestUserAttention(apps::AppShimAttentionType type) {
   Send(new AppShimMsg_SetUserAttention(type));
+}
+
+void AppShimHost::OnMenuItemSelected(const std::string& title, const std::string& parent){
+  //TODO: fill in
 }
 
 void AppShimHost::Close() {

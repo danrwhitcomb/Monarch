@@ -64,6 +64,10 @@ class AppShimHost : public IPC::Listener,
 
   // Called when the app shim process notifies that the app should quit.
   void OnQuit();
+  
+  //Called when the app shim indicates a menu item was selected, and
+  //some js action should be taken
+  void OnMenuItemSelected(const std::string& title, const std::string& parent);
 
   // apps::AppShimHandler::Host overrides:
   void OnAppLaunchComplete(apps::AppShimLaunchResult result) override;
