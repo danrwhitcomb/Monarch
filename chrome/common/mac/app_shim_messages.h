@@ -9,7 +9,6 @@
 
 #include "base/files/file_path.h"
 #include "chrome/common/mac/app_shim_launch.h"
-#include "chrome/common/mac/menu_item_dto.h"
 #include "ipc/ipc_message_macros.h"
 #include "ipc/ipc_message_utils.h"
 #include "ipc/param_traits_macros.h"
@@ -76,12 +75,18 @@ IPC_MESSAGE_CONTROL0(AppShimMsg_UnhideWithoutActivation)
 
 //MENU RELATED MESSAGES
 
+IPC_STRUCT_BEGIN(AppShimMsg_MenuItemDTO)
+
+  IPC_STRUCT_MEMBER(std::vector<AppShimMsg_MenuItemDTO>, children)
+  IPC_STRUCT_MEMBER(std::string, title)
+  IPC_STRUCT_MEMBER(bool, enabled)
+
+IPC_STRUCT_END()
+
 //Sent when specific menus in the menu bar need to be updated
 //Only the specific menu will be updated, not the entire thing
-IPC_MESSAGE_CONTROL3(AppShimMsg_UpdateMenu,
-                     std::string /* title */,
-                     std::string /* parent */,
-                     std::vector<apps::MenuDTO> /*items*/)
+IPC_MESSAGE_CONTROL1(AppShimMsg_UpdateMenu,
+                     AppShimMsg_MenuItemDTO /*rootItem*/)
 
 //Set when a menu item needs to be enabled or disabled
 //Which is happening is governed by the isEnabled param

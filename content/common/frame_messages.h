@@ -451,6 +451,17 @@ IPC_STRUCT_TRAITS_BEGIN(content::PepperRendererInstanceData)
 IPC_STRUCT_TRAITS_END()
 #endif
 
+#if defined(OS_MACOSX)
+IPC_STRUCT_BEGIN(FrameHostMsg_HTMLMDAMenuItem)
+
+  IPC_STRUCT_MEMBER(std::vector<FrameHostMsg_HTMLMDAMenuItem>, children)
+  IPC_STRUCT_MEMBER(std::string, title)
+  IPC_STRUCT_MEMBER(std::string, action)
+  IPC_STRUCT_MEMBER(bool, enabled)
+
+IPC_STRUCT_END()
+#endif
+
 // -----------------------------------------------------------------------------
 // Messages sent from the browser to the renderer.
 
@@ -1227,6 +1238,13 @@ IPC_MESSAGE_ROUTED1(FrameHostMsg_UpdatePageImportanceSignals,
 IPC_MESSAGE_ROUTED1(FrameHostMsg_ShowPopup,
                     FrameHostMsg_ShowPopup_Params)
 IPC_MESSAGE_ROUTED0(FrameHostMsg_HidePopup)
+
+#endif
+
+#if defined(OS_MACOSX)
+
+IPC_MESSAGE_ROUTED1(FrameHostMsg_UpdateToMDAMenu,
+                    FrameHostMsg_HTMLMDAMenuItem /* rootItem */);
 
 #endif
 

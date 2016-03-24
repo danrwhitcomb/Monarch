@@ -32,7 +32,6 @@
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/mac/app_mode_common.h"
 #include "chrome/common/mac/app_shim_messages.h"
-#include "chrome/common/mac/menu_item_dto.h"
 #include "chrome/grit/generated_resources.h"
 #include "ipc/ipc_channel_proxy.h"
 #include "ipc/ipc_listener.h"
@@ -107,9 +106,11 @@ class AppShimController : public IPC::Listener {
   // Builds main menu bar items.
   void SetUpMenu();
   
-  void UpdateMenu(const std::string& title, const std::string& parent, const std::vector<apps::MenuDTO>& items);
+  //Handles MDAMenu
+  void UpdateMenu(const AppShimMsg_MenuItemDTO& rootItem);
+  void BuildMenu(NSMenu* menu, const std::vector<AppShimMsg_MenuItemDTO>& children);
   void UpdateMenuItemState(const std::string& title, const std::string& menu, bool isEnabled);
-  NSMenu* GetMenuWithTitle(const std::string& title, NSMenu* menu);
+
 
   void SendSetAppHidden(bool hidden);
 
@@ -334,35 +335,23 @@ void AppShimController::OnRequestUserAttention() {
   OnSetUserAttention(apps::APP_SHIM_ATTENTION_INFORMATIONAL);
 }
 
-void AppShimController::UpdateMenu(const std::string& title, const std::string& parent, const std::vector<apps::MenuDTO>& items){
-  NSMenu* new_menu = [[NSMenu alloc] initWithTitle:base::SysUTF8ToNSString(title)];
-  for(auto const &item : items){
-    NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle: base::SysUTF8ToNSString(item.title)
-                                              action: nil
-                                       keyEquivalent:@""];
-    [new_menu addItem: new_item];
-  }
-  
-  NSMenu* menu = GetMenuWithTitle(parent, [NSApp mainMenu]);
-  NSMenuItem* parentItem  = [menu itemWithTitle: base::SysUTF8ToNSString(title)];
-  [menu setSubmenu:new_menu forItem: parentItem];
+void AppShimController::UpdateMenu(const AppShimMsg_MenuItemDTO& rootItem){
+  NSMenu* new_menu = [[NSMenu alloc] initWithTitle:base::SysUTF8ToNSString(rootItem.title)];
+  BuildMenu(new_menu, rootItem.children);
+  [NSApp setMainMenu:new_menu];
 }
 
-NSMenu* AppShimController::GetMenuWithTitle(const std::string& title, NSMenu* menu){
-  for(NSMenuItem* item : [menu itemArray]){
-    if([[item title] isEqualToString: base::SysUTF8ToNSString(title)] && [item hasSubmenu]){
-      return [item submenu];
-    } else if([item hasSubmenu]){
-      NSMenu* submenu = GetMenuWithTitle(title, [item submenu]);
-      if(submenu){
-        return submenu;
-      } else {
-        return nullptr;
-      }
+void AppShimController::BuildMenu(NSMenu* menu, const std::vector<AppShimMsg_MenuItemDTO>& children){
+  for(const auto &child : children){
+    NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle:base::SysUTF8ToNSString(child.title) action:nil keyEquivalent:@""];
+    [menu addItem:new_item];
+    
+    if(child.children.size() != 0){
+      NSMenu* submenu = [[NSMenu alloc] initWithTitle: base::SysUTF8ToNSString(child.title)];
+      BuildMenu(submenu, child.children);
     }
+    
   }
-  
-  return nullptr;
 }
 
 void AppShimController::UpdateMenuItemState(const std::string& title, const std::string& menu, bool isEnabled){

@@ -69,7 +69,6 @@
       'common/mac/cfbundle_blocker.mm',
       'common/mac/launchd.h',
       'common/mac/launchd.mm',
-      'common/mac/menu_item_dto.h',
       'common/media/media_resource_provider.cc',
       'common/media/media_resource_provider.h',
       'common/media/webrtc_logging_message_data.cc',

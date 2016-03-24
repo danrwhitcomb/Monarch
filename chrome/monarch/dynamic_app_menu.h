@@ -10,7 +10,6 @@
 #include <map>
 #include "base/memory/scoped_ptr.h"
 #include "base/observer_list.h"
-#include "chrome/common/mac/menu_item_dto.h"
 
 namespace monarch_app {
 
