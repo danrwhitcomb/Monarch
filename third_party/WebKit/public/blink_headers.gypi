@@ -423,6 +423,8 @@
       "web/WebLabelElement.h",
       "web/WebLeakDetector.h",
       "web/WebLocalFrame.h",
+      "web/WebMDAMenuElement.h",
+      "web/WebMDAMenuItemElement.h",
       "web/WebMIDIClient.h",
       "web/WebMIDIPermissionRequest.h",
       "web/WebMeaningfulLayout.h",

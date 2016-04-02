@@ -65,6 +65,7 @@
 #include "content/public/common/content_constants.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/isolated_world_ids.h"
+#include "content/public/common/mda_menu_item.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/common/url_utils.h"
 #include "ui/accessibility/ax_tree.h"
@@ -504,6 +505,7 @@ bool RenderFrameHostImpl::OnMessageReceived(const IPC::Message &msg) {
     IPC_MESSAGE_HANDLER(FrameHostMsg_DidStopLoading, OnDidStopLoading)
     IPC_MESSAGE_HANDLER(FrameHostMsg_DidChangeLoadProgress,
                         OnDidChangeLoadProgress)
+    IPC_MESSAGE_HANDLER(FrameHostMsg_UpdateToMDAMenu, OnUpdateMDAMenu)
 #if defined(OS_MACOSX) || defined(OS_ANDROID)
     IPC_MESSAGE_HANDLER(FrameHostMsg_ShowPopup, OnShowPopup)
     IPC_MESSAGE_HANDLER(FrameHostMsg_HidePopup, OnHidePopup)
@@ -1622,6 +1624,10 @@ void RenderFrameHostImpl::OnDidStopLoading() {
 
 void RenderFrameHostImpl::OnDidChangeLoadProgress(double load_progress) {
   frame_tree_node_->DidChangeLoadProgress(load_progress);
+}
+
+void RenderFrameHostImpl::OnUpdateMDAMenu(const MDAMenuItem& menu){
+  delegate_->UpdateMDAMenu(menu);
 }
 
 #if defined(OS_MACOSX) || defined(OS_ANDROID)

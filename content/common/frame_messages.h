@@ -21,6 +21,7 @@
 #include "content/public/common/context_menu_params.h"
 #include "content/public/common/frame_navigate_params.h"
 #include "content/public/common/javascript_message_type.h"
+#include "content/public/common/mda_menu_item.h"
 #include "content/public/common/message_port_types.h"
 #include "content/public/common/page_importance_signals.h"
 #include "content/public/common/page_state.h"
@@ -331,6 +332,13 @@ IPC_STRUCT_TRAITS_BEGIN(content::FrameReplicationState)
   IPC_STRUCT_TRAITS_MEMBER(name)
 IPC_STRUCT_TRAITS_END()
 
+IPC_STRUCT_TRAITS_BEGIN(content::MDAMenuItem)
+  IPC_STRUCT_TRAITS_MEMBER(title)
+  IPC_STRUCT_TRAITS_MEMBER(action)
+  IPC_STRUCT_TRAITS_MEMBER(enabled)
+  IPC_STRUCT_TRAITS_MEMBER(children)
+IPC_STRUCT_TRAITS_END()
+
 IPC_STRUCT_BEGIN(FrameMsg_NewFrame_WidgetParams)
   // Gives the routing ID for the RenderWidget that will be attached to the
   // new RenderFrame. If the RenderFrame does not need a RenderWidget, this
@@ -449,17 +457,6 @@ IPC_STRUCT_TRAITS_BEGIN(content::PepperRendererInstanceData)
   IPC_STRUCT_TRAITS_MEMBER(plugin_url)
   IPC_STRUCT_TRAITS_MEMBER(is_potentially_secure_plugin_context)
 IPC_STRUCT_TRAITS_END()
-#endif
-
-#if defined(OS_MACOSX)
-IPC_STRUCT_BEGIN(FrameHostMsg_HTMLMDAMenuItem)
-
-  IPC_STRUCT_MEMBER(std::vector<FrameHostMsg_HTMLMDAMenuItem>, children)
-  IPC_STRUCT_MEMBER(std::string, title)
-  IPC_STRUCT_MEMBER(std::string, action)
-  IPC_STRUCT_MEMBER(bool, enabled)
-
-IPC_STRUCT_END()
 #endif
 
 // -----------------------------------------------------------------------------
@@ -1244,7 +1241,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_HidePopup)
 #if defined(OS_MACOSX)
 
 IPC_MESSAGE_ROUTED1(FrameHostMsg_UpdateToMDAMenu,
-                    FrameHostMsg_HTMLMDAMenuItem /* rootItem */);
+                    content::MDAMenuItem /* rootItem */);
 
 #endif
 

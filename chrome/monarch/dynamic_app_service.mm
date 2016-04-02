@@ -208,6 +208,18 @@ void DynamicAppService::ShowErrorForURL(GURL& url){
                          chrome::MESSAGE_BOX_TYPE_WARNING);
 }
 
+DynamicApp* DynamicAppService::GetAppWithContents(WebContents* contents){
+  
+  for(std::map<std::string, scoped_refptr<DynamicApp>>::iterator it = apps_.begin(); it != apps_.end(); ++it){
+    if (it->second->GetWebContents()->GetRoutingID() == contents->GetRoutingID()){
+      return it->second.get();
+    }
+  }
+  
+  return nullptr;
+}
+
+
 std::string DynamicAppService::GenerateAppNameFromURL(const GURL& url){
 
   std::string name;

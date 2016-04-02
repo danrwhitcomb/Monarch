@@ -2985,8 +2985,10 @@ void Document::processBaseElement()
 }
 
 void Document::processMDAMenuElement(HTMLMDAMenuElement* menu){
-  //compile message data into structure
-  //send data
+  
+  if (menu->isRootMenu()){
+    m_frame->loader().client()->dispatchDidReceiveMDAMenu(menu);
+  }
 }
 
 String Document::userAgent() const

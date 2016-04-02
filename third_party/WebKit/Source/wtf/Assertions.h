@@ -40,6 +40,7 @@
 
 */
 
+#include "config.h"
 #include "wtf/Compiler.h"
 #include "wtf/Noncopyable.h"
 #include "wtf/WTFExport.h"

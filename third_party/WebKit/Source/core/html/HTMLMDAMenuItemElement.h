@@ -32,14 +32,10 @@ class HTMLMDAMenuItemElement final : public HTMLElement {
     DECLARE_NODE_FACTORY(HTMLMDAMenuItemElement);
     
     const String action() const;
-      
+    bool disabled() const;
+  
   private:
     explicit HTMLMDAMenuItemElement(Document&);
-    
-    // Might want to keep these around for dynamics
-//    InsertionNotificationRequest insertedInto(ContainerNode*) override;
-//    void removedFrom(ContainerNode*) override;
-    //    void childrenChanged(const ChildrenChange&) override;
   };
   
 } // namespace blink

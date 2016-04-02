@@ -43,6 +43,7 @@
 #include "core/frame/Settings.h"
 #include "core/html/HTMLFrameElementBase.h"
 #include "core/html/HTMLMediaElement.h"
+#include "core/html/HTMLMDAMenuElement.h"
 #include "core/html/HTMLPlugInElement.h"
 #include "core/input/EventHandler.h"
 #include "core/layout/HitTestResult.h"
@@ -87,6 +88,7 @@
 #include "public/web/WebDocument.h"
 #include "public/web/WebFormElement.h"
 #include "public/web/WebFrameClient.h"
+#include "public/web/WebMDAMenuElement.h"
 #include "public/web/WebNode.h"
 #include "public/web/WebPlugin.h"
 #include "public/web/WebPluginParams.h"
@@ -451,6 +453,12 @@ void FrameLoaderClientImpl::dispatchDidReceiveTitle(const String& title)
 {
     if (m_webFrame->client())
         m_webFrame->client()->didReceiveTitle(m_webFrame, title, WebTextDirectionLeftToRight);
+}
+
+void FrameLoaderClientImpl::dispatchDidReceiveMDAMenu( HTMLMDAMenuElement* menu){
+  if(m_webFrame->client()){
+     m_webFrame->client()->didReceiveMDAMenu(m_webFrame, WebMDAMenuElement(menu));
+  }
 }
 
 void FrameLoaderClientImpl::dispatchDidChangeIcons(IconType type)

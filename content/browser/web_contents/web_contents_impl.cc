@@ -96,6 +96,7 @@
 #include "content/public/common/browser_plugin_guest_mode.h"
 #include "content/public/common/content_constants.h"
 #include "content/public/common/content_switches.h"
+#include "content/public/common/mda_menu_item.h"
 #include "content/public/common/page_zoom.h"
 #include "content/public/common/result_codes.h"
 #include "content/public/common/security_style.h"
@@ -954,6 +955,11 @@ const base::string16& WebContentsImpl::GetTitle() const {
   // if no title cannot be retrieved.
   return page_title_when_no_navigation_entry_;
 }
+
+void WebContentsImpl::UpdateMDAMenu(const MDAMenuItem& menu){
+  FOR_EACH_OBSERVER(WebContentsObserver, observers_, OnUpdateMDAMenu(menu));
+}
+
 
 int32 WebContentsImpl::GetMaxPageID() {
   return GetMaxPageIDForSiteInstance(GetSiteInstance());

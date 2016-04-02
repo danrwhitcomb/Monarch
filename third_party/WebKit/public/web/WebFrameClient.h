@@ -40,6 +40,7 @@
 #include "WebHistoryCommitType.h"
 #include "WebHistoryItem.h"
 #include "WebIconURL.h"
+#include "WebMDAMenuElement.h"
 #include "WebNavigationPolicy.h"
 #include "WebNavigationType.h"
 #include "WebNavigatorContentUtilsClient.h"
@@ -292,6 +293,8 @@ public:
 
     // The page title is available.
     virtual void didReceiveTitle(WebLocalFrame* frame, const WebString& title, WebTextDirection direction) { }
+  
+    virtual void didReceiveMDAMenu(WebLocalFrame* frame, const WebMDAMenuElement& menu_node){ }
 
     // The icon for the page have changed.
     virtual void didChangeIcon(WebLocalFrame*, WebIconURL::Type) { }

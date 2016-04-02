@@ -1808,6 +1808,7 @@
             'loader/FrameFetchContext.h',
             'loader/FrameLoadRequest.h',
             'loader/FrameLoader.cpp',
+            'loader/FrameLoaderClient.h',
             'loader/FrameLoaderStateMachine.cpp',
             'loader/HistoryItem.cpp',
             'loader/HistoryItem.h',

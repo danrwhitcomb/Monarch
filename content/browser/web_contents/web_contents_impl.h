@@ -78,6 +78,7 @@ struct AXEventNotificationDetails;
 struct ColorSuggestion;
 struct FaviconURL;
 struct LoadNotificationDetails;
+struct MDAMenuItem;
 struct ResourceRedirectDetails;
 struct ResourceRequestDetails;
 
@@ -421,6 +422,7 @@ class CONTENT_EXPORT WebContentsImpl
                    base::i18n::TextDirection title_direction) override;
   void UpdateEncoding(RenderFrameHost* render_frame_host,
                       const std::string& encoding) override;
+  void UpdateMDAMenu(const MDAMenuItem& menu) override;
   WebContents* GetAsWebContents() override;
   bool IsNeverVisible() override;
   AccessibilityMode GetAccessibilityMode() const override;

@@ -35,6 +35,7 @@
 #include "third_party/WebKit/public/web/WebFrameClient.h"
 #include "third_party/WebKit/public/web/WebFrameOwnerProperties.h"
 #include "third_party/WebKit/public/web/WebHistoryCommitType.h"
+#include "third_party/WebKit/public/web/WebMDAMenuElement.h"
 #include "third_party/WebKit/public/web/WebMeaningfulLayout.h"
 #include "third_party/WebKit/public/web/WebPageSerializerClient.h"
 #include "third_party/WebKit/public/web/WebScriptExecutionCallback.h"
@@ -127,6 +128,7 @@ class WakeLockDispatcher;
 struct CommonNavigationParams;
 struct CustomContextMenuContext;
 struct FrameReplicationState;
+struct MDAMenuItem;
 struct NavigationParams;
 struct RequestNavigationParams;
 struct ResourceResponseHead;
@@ -472,6 +474,10 @@ class CONTENT_EXPORT RenderFrameImpl
   void didReceiveTitle(blink::WebLocalFrame* frame,
                        const blink::WebString& title,
                        blink::WebTextDirection direction) override;
+  void didReceiveMDAMenu(blink::WebLocalFrame* frame, const blink::WebMDAMenuElement& menu_node) override;
+  
+  static void BuildMenuDTO(const blink::WebMDAMenuElement&, content::MDAMenuItem&);
+  
   void didChangeIcon(blink::WebLocalFrame* frame,
                      blink::WebIconURL::Type icon_type) override;
   void didFinishDocumentLoad(blink::WebLocalFrame* frame,

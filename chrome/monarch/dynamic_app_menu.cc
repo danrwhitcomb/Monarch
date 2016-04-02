@@ -6,63 +6,36 @@
 #include <vector>
 
 #include "chrome/monarch/dynamic_app_menu.h"
+#include "content/public/common/mda_menu_item.h"
 
 namespace monarch_app {
-
-  DynamicAppMenu::MenuItem::MenuItem()
-    : enabled(true),
-      parent(nullptr){}
-  
-  DynamicAppMenu::MenuItem::~MenuItem(){}
   
   scoped_ptr<DynamicAppMenu> DynamicAppMenu::Create(){
-    scoped_ptr<DynamicAppMenu::MenuItem> rootItem(new DynamicAppMenu::MenuItem());
-    scoped_ptr<DynamicAppMenu> menu(new DynamicAppMenu(std::move(rootItem)));
-  
+    scoped_ptr<DynamicAppMenu> menu(new DynamicAppMenu());
     return menu;
+  }
+  
+  scoped_ptr<DynamicAppMenu> DynamicAppMenu::CreateWithMenu(const content::MDAMenuItem& menu){
+    return scoped_ptr<DynamicAppMenu>(new DynamicAppMenu(menu));
   }
   
   //Item handlers
   
-  DynamicAppMenu::MenuItem* DynamicAppMenu::GetRootItem(){
+  content::MDAMenuItem DynamicAppMenu::GetRootItem(){
     return root_;
   }
   
-  DynamicAppMenu::MenuItem* DynamicAppMenu::GetItem(std::string title){
+  content::MDAMenuItem DynamicAppMenu::GetItem(std::string title){
     if(HasItemWithTitle(title))
-      return items_[title].get();
+      return items_[title];
     else
-      return nullptr;
+      return content::MDAMenuItem();
   }
   
-  void DynamicAppMenu::AddItemToParent(scoped_ptr<DynamicAppMenu::MenuItem> item, DynamicAppMenu::MenuItem* parent){
-    if(!HasItemWithTitle(item->title)){
-      parent->children.push_back(item.get());
-      item->parent = parent;
-    
-      items_.insert(std::pair<std::string, scoped_ptr<DynamicAppMenu::MenuItem>>(item->title, std::move(item)));
-    }
-  }
-  
-  void DynamicAppMenu::DisableItem(std::string title){
-    if(HasItemWithTitle(title))
-      items_[title]->enabled = false;
-  }
-  
-  void DynamicAppMenu::EnableItem(std::string title){
-    if(HasItemWithTitle(title))
-      items_[title]->enabled = true;
-  }
-  
-  void DynamicAppMenu::RemoveItem(std::string title){
-    MenuItem* item = GetItem(title);
-    if(item){
-      item->parent->children.erase(
-        std::remove(item->parent->children.begin(),
-                    item->parent->children.end(), item),
-                    item->parent->children.end());
-      
-      items_.erase(title);
+  void DynamicAppMenu::ParseMenu(const content::MDAMenuItem& menu){
+    for(auto& child : menu.children){
+      items_.insert(std::pair<std::string, content::MDAMenuItem>(child.title, child));
+      ParseMenu(child);
     }
   }
   
@@ -74,22 +47,15 @@ namespace monarch_app {
   }
 
   //Notifying observers
-  void DynamicAppMenu::NotifyMenuChange(DynamicAppMenu* menu){
-    FOR_EACH_OBSERVER(Observer, observers_, OnMenuUpdated(menu));
+  void DynamicAppMenu::NotifyMenuChange(){
+    FOR_EACH_OBSERVER(Observer, observers_, OnMenuUpdated(this));
   }
   
-  void DynamicAppMenu::NotifyItemEnabled(MenuItem *item){
-    FOR_EACH_OBSERVER(Observer, observers_, OnItemEnabled(item));
-  }
-  
-  void DynamicAppMenu::NotifyItemDisabled(DynamicAppMenu::MenuItem* item){
-    FOR_EACH_OBSERVER(Observer, observers_, OnItemDisabled(item));
-  }
-  
-  //constructos/destructors
-  DynamicAppMenu::DynamicAppMenu(scoped_ptr<MenuItem> root){
-    items_.insert(std::pair<std::string, scoped_ptr<DynamicAppMenu::MenuItem>>(root->title, std::move(root)));
-    root_ = root.get();
+  DynamicAppMenu::DynamicAppMenu(){}
+  DynamicAppMenu::DynamicAppMenu(const content::MDAMenuItem& root){
+    root_ = root;
+    items_.insert(std::pair<std::string, content::MDAMenuItem>(root.title, root));
+    ParseMenu(root);
   }
   
   DynamicAppMenu::~DynamicAppMenu(){}

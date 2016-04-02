@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "content/renderer/render_frame_impl.h"
 
 #include <map>
 #include <string>
+
+#include "content/renderer/render_frame_impl.h"
 
 #include "base/auto_reset.h"
 #include "base/command_line.h"
@@ -50,6 +51,7 @@
 #include "content/public/common/content_switches.h"
 #include "content/public/common/context_menu_params.h"
 #include "content/public/common/isolated_world_ids.h"
+#include "content/public/common/mda_menu_item.h"
 #include "content/public/common/page_state.h"
 #include "content/public/common/resource_response.h"
 #include "content/public/common/url_constants.h"
@@ -135,6 +137,7 @@
 #include "third_party/WebKit/public/web/WebGlyphCache.h"
 #include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
+#include "third_party/WebKit/public/web/WebMDAMenuItemElement.h"
 #include "third_party/WebKit/public/web/WebMediaStreamRegistry.h"
 #include "third_party/WebKit/public/web/WebNavigationPolicy.h"
 #include "third_party/WebKit/public/web/WebPageSerializer.h"
@@ -221,6 +224,8 @@ using blink::WebFrame;
 using blink::WebHistoryItem;
 using blink::WebHTTPBody;
 using blink::WebLocalFrame;
+using blink::WebMDAMenuElement;
+using blink::WebMDAMenuItemElement;
 using blink::WebMediaPlayer;
 using blink::WebMediaPlayerClient;
 using blink::WebMediaPlayerEncryptedMediaClient;
@@ -3016,6 +3021,46 @@ void RenderFrameImpl::didReceiveTitle(blink::WebLocalFrame* frame,
 
   // Also check whether we have new encoding name.
   UpdateEncoding(frame, frame->view()->pageEncoding().utf8());
+}
+
+void RenderFrameImpl::BuildMenuDTO(const WebMDAMenuElement& menu, content::MDAMenuItem& rootItem){
+  
+  rootItem.enabled = true;
+  
+  blink::WebNode child = menu.firstChild();
+  
+  while(!child.isNull()){
+    //For each child either add to children, or build submenu
+    content::MDAMenuItem new_item;
+    if(child.to<WebMDAMenuElement>().isNull()){
+      
+      const WebMDAMenuElement child_menu = child.to<WebMDAMenuElement>();
+      
+      BuildMenuDTO(child_menu, new_item);
+      new_item.title = child_menu.title().latin1();
+      new_item.enabled = true;
+      rootItem.children.push_back(new_item);
+      
+    } else if (!child.to<WebMDAMenuItemElement>().isNull()){
+      
+      WebMDAMenuItemElement child_item = child.to<WebMDAMenuItemElement>();
+      
+      new_item.title = child_item.title().latin1();
+      new_item.action = child_item.action().latin1();
+      new_item.enabled = !child_item.disabled();
+      
+      rootItem.children.push_back(new_item);
+    } //Don't do anything if else
+    
+    child = child.nextSibling();
+  }
+}
+
+void RenderFrameImpl::didReceiveMDAMenu(blink::WebLocalFrame* frame, const blink::WebMDAMenuElement& menu){
+ 
+  content::MDAMenuItem rootItem;
+  BuildMenuDTO(menu, rootItem);
+  Send(new FrameHostMsg_UpdateToMDAMenu(routing_id_, rootItem));
 }
 
 void RenderFrameImpl::didChangeIcon(blink::WebLocalFrame* frame,

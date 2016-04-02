@@ -91,6 +91,7 @@ public:
     virtual void dispatchWillClose() = 0;
     virtual void dispatchDidStartProvisionalLoad(double triggeringEventTime) = 0;
     virtual void dispatchDidReceiveTitle(const String&) = 0;
+    virtual void dispatchDidReceiveMDAMenu(HTMLMDAMenuElement*) = 0;
     virtual void dispatchDidChangeIcons(IconType) = 0;
     virtual void dispatchDidCommitLoad(HistoryItem*, HistoryCommitType) = 0;
     virtual void dispatchDidFailProvisionalLoad(const ResourceError&, HistoryCommitType) = 0;

@@ -75,6 +75,7 @@ class ResourceRequestBody;
 class StreamHandle;
 class TimeoutMonitor;
 struct ContextMenuParams;
+struct MDAMenuItem;
 struct GlobalRequestID;
 struct Referrer;
 struct ResourceResponse;
@@ -579,6 +580,7 @@ class CONTENT_EXPORT RenderFrameHostImpl
   void OnDidStartLoading(bool to_different_document);
   void OnDidStopLoading();
   void OnDidChangeLoadProgress(double load_progress);
+  void OnUpdateMDAMenu(const MDAMenuItem& menu);
 
 #if defined(OS_MACOSX) || defined(OS_ANDROID)
   void OnShowPopup(const FrameHostMsg_ShowPopup_Params& params);

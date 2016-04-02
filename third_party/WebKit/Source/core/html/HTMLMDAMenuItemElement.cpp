@@ -36,26 +36,15 @@ namespace blink {
   : HTMLElement(mdamenuitemTag, document)
   {
   }
-  
-//  Node::InsertionNotificationRequest HTMLBaseElement::insertedInto(ContainerNode* insertionPoint)
-//  {
-//    HTMLElement::insertedInto(insertionPoint);
-//    if (insertionPoint->inDocument())
-//      document().processBaseElement();
-//    return InsertionDone;
-//  }
-//  
-//  void HTMLBaseElement::removedFrom(ContainerNode* insertionPoint)
-//  {
-//    HTMLElement::removedFrom(insertionPoint);
-//    if (insertionPoint->inDocument())
-//      document().processBaseElement();
-//  }
-//
 
   const String HTMLMDAMenuItemElement::action() const
   {
     return getAttribute(actionAttr);
+  }
+  
+  bool HTMLMDAMenuItemElement::disabled() const
+  {
+    return hasAttribute(disabledAttr);
   }
   
   DEFINE_NODE_FACTORY(HTMLMDAMenuItemElement);

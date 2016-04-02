@@ -4,15 +4,17 @@
 
 #include <string>
 #include <map>
+
 #include "base/files/file_path.h"
 #include "base/files/file.h"
 #include "base/files/file_util.h"
-#include "content/public/browser/browser_thread.h"
-#include "components/crx_file/id_util.h"
 #include "chrome/browser/web_applications/web_app.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/monarch/dynamic_app_service.h"
 #include "chrome/monarch/monarch_util.h"
+#include "components/crx_file/id_util.h"
+#include "content/common/frame_messages.h"
+#include "content/public/browser/browser_thread.h"
 
 #include "chrome/monarch/dynamic_app.h"
 
@@ -41,7 +43,9 @@ DynamicApp::DynamicApp(const DynamicAppParams& params):
     extension_path_ = dir.Append("1.0_0");
     
     extension_id_ = crx_file::id_util::GenerateIdForPath(extension_path_);
-
+    
+    //Setup observer
+    Observe(contents_);
 }
   
 
@@ -53,7 +57,14 @@ DynamicApp::~DynamicApp(){
 
 void DynamicApp::SetMenu(scoped_ptr<DynamicAppMenu> menu){
   menu_.reset(menu.release());
+  menu->NotifyMenuChange();
 }
+
+void DynamicApp::OnUpdateMDAMenu(const MDAMenuItem& menu){
+  scoped_ptr<DynamicAppMenu> new_menu = DynamicAppMenu::CreateWithMenu(menu);
+  SetMenu(std::move(new_menu));
+}
+
 
 //Getters
 std::string DynamicApp::GetExtensionID(){ return extension_id_; }

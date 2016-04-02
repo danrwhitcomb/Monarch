@@ -34,7 +34,7 @@ namespace blink {
   inline HTMLMDAMenuElement::HTMLMDAMenuElement(Document& document)
   : HTMLElement(mdamenuTag, document){}
   
-  bool HTMLMDAMenuElement::isRootMenu(){
+  bool HTMLMDAMenuElement::isRootMenu() const {
     HTMLElement* parent = toHTMLElement(parentElement());
     return !isHTMLMDAMenuElement(parent);
   }

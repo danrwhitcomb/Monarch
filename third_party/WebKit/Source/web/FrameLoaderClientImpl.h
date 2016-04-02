@@ -92,6 +92,7 @@ public:
     void dispatchWillClose() override;
     void dispatchDidStartProvisionalLoad(double triggeringEventTime) override;
     void dispatchDidReceiveTitle(const String&) override;
+    void dispatchDidReceiveMDAMenu(HTMLMDAMenuElement*) override;
     void dispatchDidChangeIcons(IconType) override;
     void dispatchDidCommitLoad(HistoryItem*, HistoryCommitType) override;
     void dispatchDidFailProvisionalLoad(const ResourceError&, HistoryCommitType) override;

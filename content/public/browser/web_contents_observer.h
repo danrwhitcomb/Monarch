@@ -31,6 +31,7 @@ struct FaviconURL;
 struct FrameNavigateParams;
 struct LoadCommittedDetails;
 struct LoadFromMemoryCacheDetails;
+struct MDAMenuItem;
 struct Referrer;
 struct ResourceRedirectDetails;
 struct ResourceRequestDetails;
@@ -432,6 +433,9 @@ class CONTENT_EXPORT WebContentsObserver : public IPC::Listener,
 
   // Notification that |contents| has gained focus.
   virtual void OnWebContentsFocused() {}
+  
+  //Notify that an update to the MDAMenu
+  virtual void OnUpdateMDAMenu(const content::MDAMenuItem&) {}
 
   // IPC::Listener implementation.
   bool OnMessageReceived(const IPC::Message& message) override;

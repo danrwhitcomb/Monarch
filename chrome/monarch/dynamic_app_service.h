@@ -50,6 +50,8 @@ class DynamicAppService : public RefcountedKeyedService,
                           const std::string& error);
     
     DynamicApp* GetAppWithID(const std::string& app_id);
+    DynamicApp* GetAppWithContents(WebContents* contents);
+    
     void UninstallApp(const std::string& app_id,
                       const base::FilePath& extension_path);
                   

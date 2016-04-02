@@ -31,7 +31,7 @@ class HTMLMDAMenuElement final : public HTMLElement {
   public:
     DECLARE_NODE_FACTORY(HTMLMDAMenuElement);
   
-    bool isRootMenu();
+    bool isRootMenu() const;
     HTMLMDAMenuElement* getRootMenuElement();
   
   private:

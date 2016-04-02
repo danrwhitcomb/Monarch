@@ -23,16 +23,18 @@
 class GURL;
 
 namespace IPC {
-class Message;
+  class Message;
 }
 
 namespace content {
+
 class GeolocationServiceContext;
 class RenderFrameHost;
 class WakeLockServiceContext;
 class WebContents;
 struct AXEventNotificationDetails;
 struct ContextMenuParams;
+struct MDAMenuItem;
 struct TransitionLayerData;
 
 // An interface implemented by an object interested in knowing about the state
@@ -146,6 +148,9 @@ class CONTENT_EXPORT RenderFrameHostDelegate {
 
   // Notification that the frame wants to go out of fullscreen mode.
   virtual void ExitFullscreenMode() {}
+  
+  //MDAMenu helper, sends data to Dynamic App
+  virtual void UpdateMDAMenu(const MDAMenuItem& menu) {}
 
   // Let the delegate decide whether postMessage should be delivered to
   // |target_rfh| from a source frame in the given SiteInstance.  This defaults

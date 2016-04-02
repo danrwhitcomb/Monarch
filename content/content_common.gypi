@@ -83,6 +83,8 @@
       'public/common/main_function_params.h',
       'public/common/manifest.cc',
       'public/common/manifest.h',
+      'public/common/mda_menu_item.cc',
+      'public/common/mda_menu_item.h',
       'public/common/media_stream_request.cc',
       'public/common/media_stream_request.h',
       'public/common/menu_item.cc',

@@ -10,15 +10,20 @@
 #include "base/files/file_path.h"
 
 #include "base/memory/ref_counted.h"
+#include "base/memory/scoped_ptr.h"
 #include "chrome/browser/profiles/profile.h"
-
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/monarch/dynamic_app_menu.h"
-#include "base/memory/scoped_ptr.h"
+#include "content/public/browser/web_contents_observer.h"
+
+namespace content {
+  struct MDAMenuItem;
+}
 
 namespace monarch_app {
 
-class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
+class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
+                   public content::WebContentsObserver {
   public:
   
     struct DynamicAppParams {
@@ -53,6 +58,9 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
     base::FilePath GetExtensionPath();
     base::FilePath GetAppBundlePath();
     void SetExtensionID(std::string extension_id);
+    
+    //WebContentsObserver
+    void OnUpdateMDAMenu(const content::MDAMenuItem&) override;
   
   private:
     friend class base::RefCountedThreadSafe<DynamicApp>;
@@ -69,8 +77,7 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp> {
     base::FilePath profile_path_;
     scoped_ptr<DynamicAppMenu> menu_;
   
-  
-    ~DynamicApp();
+    ~DynamicApp() override;
   
     bool ReplaceManifestData();
     bool ReplaceBackgroundJSData();
