@@ -3025,6 +3025,8 @@ void RenderFrameImpl::didReceiveTitle(blink::WebLocalFrame* frame,
 
 void RenderFrameImpl::BuildMenuDTO(const WebMDAMenuElement& menu, content::MDAMenuItem& rootItem){
   
+  DCHECK(!menu.isNull());
+  
   rootItem.enabled = true;
   
   blink::WebNode child = menu.firstChild();
@@ -3032,25 +3034,31 @@ void RenderFrameImpl::BuildMenuDTO(const WebMDAMenuElement& menu, content::MDAMe
   while(!child.isNull()){
     //For each child either add to children, or build submenu
     content::MDAMenuItem new_item;
-    if(child.to<WebMDAMenuElement>().isNull()){
+    blink::WebElement child_element;
+    
+    if(child.isElementNode()){
+      child_element = child.to<blink::WebElement>();
       
-      const WebMDAMenuElement child_menu = child.to<WebMDAMenuElement>();
-      
-      BuildMenuDTO(child_menu, new_item);
-      new_item.title = child_menu.title().latin1();
-      new_item.enabled = true;
-      rootItem.children.push_back(new_item);
-      
-    } else if (!child.to<WebMDAMenuItemElement>().isNull()){
-      
-      WebMDAMenuItemElement child_item = child.to<WebMDAMenuItemElement>();
-      
-      new_item.title = child_item.title().latin1();
-      new_item.action = child_item.action().latin1();
-      new_item.enabled = !child_item.disabled();
-      
-      rootItem.children.push_back(new_item);
-    } //Don't do anything if else
+      if(child_element.hasHTMLTagName("mdamenu")){
+        
+        const WebMDAMenuElement child_menu = child.toConst<WebMDAMenuElement>();
+        
+        BuildMenuDTO(child_menu, new_item);
+        new_item.title = child_menu.title().latin1();
+        new_item.enabled = true;
+        rootItem.children.push_back(new_item);
+        
+      } else if (child_element.hasHTMLTagName("mdamenuitem")){
+        
+        WebMDAMenuItemElement child_item = child.to<WebMDAMenuItemElement>();
+        
+        new_item.title = child_item.title().latin1();
+        new_item.action = child_item.action().latin1();
+        new_item.enabled = !child_item.disabled();
+        
+        rootItem.children.push_back(new_item);
+      }
+    }
     
     child = child.nextSibling();
   }

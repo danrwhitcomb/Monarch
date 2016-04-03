@@ -55,10 +55,16 @@ namespace blink {
     return element;
   }
   
+  void HTMLMDAMenuElement::finishParsingChildren(){
+    if(isRootMenu()){
+      document().processMDAMenuElement(this);
+    }
+  }
+  
   Node::InsertionNotificationRequest HTMLMDAMenuElement::insertedInto(ContainerNode* insertionPoint)
   {
     HTMLElement::insertedInto(insertionPoint);
-    if (insertionPoint->inDocument())
+    if (insertionPoint->inDocument() && isFinishedParsingChildren())
       document().processMDAMenuElement(this);
     return InsertionDone;
   }
@@ -66,14 +72,16 @@ namespace blink {
   void HTMLMDAMenuElement::removedFrom(ContainerNode* insertionPoint)
   {
     HTMLElement::removedFrom(insertionPoint);
-    if (insertionPoint->inDocument())
+    if (insertionPoint->inDocument() && isFinishedParsingChildren())
       document().processMDAMenuElement(this);
   }
   
   void HTMLMDAMenuElement::childrenChanged(const ChildrenChange& change)
   {
-    HTMLElement::childrenChanged(change);
-    document().processMDAMenuElement(this);
+    if(isFinishedParsingChildren()){
+      HTMLElement::childrenChanged(change);
+      document().processMDAMenuElement(this);
+    }
   }
 
   DEFINE_NODE_FACTORY(HTMLMDAMenuElement);

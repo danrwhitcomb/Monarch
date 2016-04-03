@@ -38,6 +38,7 @@ class HTMLMDAMenuElement final : public HTMLElement {
     explicit HTMLMDAMenuElement(Document&);
 
     InsertionNotificationRequest insertedInto(ContainerNode*) override;
+    void finishParsingChildren() override;
     void removedFrom(ContainerNode*) override;
     void childrenChanged(const ChildrenChange&) override;
 };
