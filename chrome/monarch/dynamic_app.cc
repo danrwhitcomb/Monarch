@@ -57,7 +57,7 @@ DynamicApp::~DynamicApp(){
 
 void DynamicApp::SetMenu(scoped_ptr<DynamicAppMenu> menu){
   menu_.reset(menu.release());
-  menu->NotifyMenuChange();
+  menu_->NotifyMenuChange();
 }
 
 void DynamicApp::OnUpdateMDAMenu(const MDAMenuItem& menu){
