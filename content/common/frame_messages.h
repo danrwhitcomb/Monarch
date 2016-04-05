@@ -1243,6 +1243,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_HidePopup)
 IPC_MESSAGE_ROUTED1(FrameHostMsg_UpdateToMDAMenu,
                     content::MDAMenuItem /* rootItem */);
 
+//Upon receiving this, the render process should send a
+//FrameHostMsg_UpdateToMDAMenu response
+IPC_MESSAGE_ROUTED0(FrameMsg_RequestMDAMenu)
+
 #endif
 
 // Adding a new message? Stick to the sort order above: first platform

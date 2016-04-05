@@ -20,6 +20,7 @@
 #include "content/common/mojo/service_registry_impl.h"
 #include "content/public/common/console_message_level.h"
 #include "content/public/common/javascript_message_type.h"
+#include "content/public/common/mda_menu_item.h"
 #include "content/public/common/referrer.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/renderer/render_frame_proxy.h"
@@ -767,6 +768,9 @@ class CONTENT_EXPORT RenderFrameImpl
       std::vector<GURL> original_urls,
       std::vector<base::FilePath> equivalent_local_paths,
       base::FilePath local_directory_path);
+      
+  //Handles request for MDAMenu
+  void OnRequestMDAMenu();
 
   void OpenURL(const GURL& url,
                const Referrer& referrer,
@@ -961,6 +965,8 @@ class CONTENT_EXPORT RenderFrameImpl
 
   // The node that the context menu was pressed over.
   blink::WebNode context_menu_node_;
+  
+  content::MDAMenuItem mda_menu_;
 
   // External context menu requests we're waiting for. "Internal"
   // (WebKit-originated) context menu events will have an ID of 0 and will not

@@ -1190,6 +1190,7 @@ bool RenderFrameImpl::OnMessageReceived(const IPC::Message& msg) {
                         OnGetSavableResourceLinks)
     IPC_MESSAGE_HANDLER(FrameMsg_GetSerializedHtmlWithLocalLinks,
                         OnGetSerializedHtmlWithLocalLinks)
+    IPC_MESSAGE_HANDLER(FrameMsg_RequestMDAMenu, OnRequestMDAMenu)
 #if defined(OS_ANDROID)
     IPC_MESSAGE_HANDLER(FrameMsg_SelectPopupMenuItems, OnSelectPopupMenuItems)
 #elif defined(OS_MACOSX)
@@ -3068,7 +3069,12 @@ void RenderFrameImpl::didReceiveMDAMenu(blink::WebLocalFrame* frame, const blink
  
   content::MDAMenuItem rootItem;
   BuildMenuDTO(menu, rootItem);
+  mda_menu_ = rootItem;
   Send(new FrameHostMsg_UpdateToMDAMenu(routing_id_, rootItem));
+}
+
+void RenderFrameImpl::OnRequestMDAMenu(){
+  Send(new FrameHostMsg_UpdateToMDAMenu(routing_id_, mda_menu_));
 }
 
 void RenderFrameImpl::didChangeIcon(blink::WebLocalFrame* frame,
