@@ -8,6 +8,7 @@
 #include "base/files/file_path.h"
 #include "base/files/file.h"
 #include "base/files/file_util.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/web_applications/web_app.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/monarch/dynamic_app_service.h"
@@ -57,7 +58,7 @@ DynamicApp::~DynamicApp(){
 
 void DynamicApp::SetMenu(scoped_ptr<DynamicAppMenu> menu){
   menu_.reset(menu.release());
-  menu_->NotifyMenuChange();
+  NotifyMenuChange();
 }
 
 void DynamicApp::OnUpdateMDAMenu(const MDAMenuItem& menu){
@@ -89,6 +90,22 @@ base::FilePath DynamicApp::GetExtensionPath(){
 
 void DynamicApp::SetExtensionID(std::string extension_id){ extension_id_ = extension_id; }
 
+ 
+//Observer handlers
+void DynamicApp::AddObserver(Observer* observer){
+  observers_.AddObserver(observer);
+}
+
+void DynamicApp::RemoveObserver(Observer* observer){
+  observers_.RemoveObserver(observer);
+}
+  
+//Notifying observers
+void DynamicApp::NotifyMenuChange(){
+  FOR_EACH_OBSERVER(Observer, observers_, OnMenuUpdated(Profile::FromBrowserContext(contents_->GetBrowserContext()), extension_id_, menu_.get()));
+}
+
+//Private
 bool DynamicApp::CopyBaseExtension(){
   base::FilePath ext_dir = GetParentPath(GetExtensionPath());
   if(!base::DirectoryExists(ext_dir)){

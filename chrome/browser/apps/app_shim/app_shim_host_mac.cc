@@ -10,6 +10,7 @@
 #include "chrome/browser/apps/app_shim/app_shim_handler_mac.h"
 #include "chrome/common/mac/app_shim_messages.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/common/mda_menu_item.h"
 #include "ipc/ipc_channel_proxy.h"
 
 AppShimHost::AppShimHost() : initial_launch_finished_(false) {}
@@ -127,6 +128,26 @@ void AppShimHost::OnAppUnhideWithoutActivation() {
 
 void AppShimHost::OnAppRequestUserAttention(apps::AppShimAttentionType type) {
   Send(new AppShimMsg_SetUserAttention(type));
+}
+
+void AppShimHost::BuildMenuItemDTO(content::MDAMenuItem& menu, AppShimMsg_MenuItemDTO& parent){
+  for(auto& child : menu.children){
+  
+    //Create new child
+    AppShimMsg_MenuItemDTO new_child;
+    new_child.title = child.title;
+    new_child.enabled = child.enabled;
+    
+    //Traverse children
+    BuildMenuItemDTO(child, new_child);
+    parent.children.push_back(new_child);
+  }
+}
+
+void AppShimHost::OnMDAMenuUpdated(content::MDAMenuItem& menu){
+  AppShimMsg_MenuItemDTO menu_dto;
+  BuildMenuItemDTO(menu, menu_dto);
+  Send(new AppShimMsg_UpdateMenu(menu_dto));
 }
 
 void AppShimHost::OnMenuItemSelected(const std::string& title, const std::string& parent){

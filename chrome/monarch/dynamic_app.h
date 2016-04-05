@@ -7,10 +7,11 @@
 
 #include <stdio.h>
 #include <string>
-#include "base/files/file_path.h"
 
+#include "base/files/file_path.h"
 #include "base/memory/ref_counted.h"
 #include "base/memory/scoped_ptr.h"
+#include "base/observer_list.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/monarch/dynamic_app_menu.h"
@@ -36,6 +37,14 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
       GURL url; // url of app
       base::FilePath profile_path;
     };
+    
+     class Observer {
+     public:
+       
+       virtual void OnMenuUpdated(Profile* profile, std::string& app_id, DynamicAppMenu* menu){}
+       ~Observer(){}
+     };
+                     
   
     //Creaters
     static scoped_refptr<DynamicApp> Create(const DynamicAppParams& params);
@@ -59,6 +68,13 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
     base::FilePath GetAppBundlePath();
     void SetExtensionID(std::string extension_id);
     
+     //Observer handlers
+     void AddObserver(Observer* observer);
+     void RemoveObserver(Observer* observer);
+     
+     //Notify observers
+     void NotifyMenuChange();
+    
     //WebContentsObserver
     void OnUpdateMDAMenu(const content::MDAMenuItem&) override;
   
@@ -76,6 +92,9 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
     base::FilePath extension_path_;
     base::FilePath profile_path_;
     scoped_ptr<DynamicAppMenu> menu_;
+    
+    //Observer
+    base::ObserverList<Observer> observers_;
   
     ~DynamicApp() override;
   

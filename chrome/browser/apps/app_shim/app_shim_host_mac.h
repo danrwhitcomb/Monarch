@@ -21,6 +21,12 @@ class ChannelProxy;
 class Message;
 }  // namespace IPC
 
+namespace content {
+  struct MDAMenuItem;
+}
+
+struct AppShimMsg_MenuItemDTO;
+
 // This is the counterpart to AppShimController in
 // chrome/app/chrome_main_app_mode_mac.mm. The AppShimHost owns itself, and is
 // destroyed when the app it corresponds to is closed or when the channel
@@ -75,6 +81,9 @@ class AppShimHost : public IPC::Listener,
   void OnAppHide() override;
   void OnAppUnhideWithoutActivation() override;
   void OnAppRequestUserAttention(apps::AppShimAttentionType type) override;
+  void OnMDAMenuUpdated(content::MDAMenuItem& menu) override;
+  void BuildMenuItemDTO(content::MDAMenuItem& menu, AppShimMsg_MenuItemDTO& parent);
+  
   base::FilePath GetProfilePath() const override;
   std::string GetAppId() const override;
 

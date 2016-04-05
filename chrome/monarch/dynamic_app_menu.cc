@@ -45,11 +45,6 @@ namespace monarch_app {
     size_t count = items_.count(title);
     return count > 0 ? true : false;
   }
-
-  //Notifying observers
-  void DynamicAppMenu::NotifyMenuChange(){
-    FOR_EACH_OBSERVER(Observer, observers_, OnMenuUpdated(this));
-  }
   
   DynamicAppMenu::DynamicAppMenu(){}
   DynamicAppMenu::DynamicAppMenu(const content::MDAMenuItem& root){

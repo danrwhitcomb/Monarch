@@ -5,38 +5,33 @@
 
 #include "apps/app_lifetime_monitor.h"
 #include "apps/app_lifetime_monitor_factory.h"
-
-#include "extensions/common/manifest_handlers/file_handler_info.h"
-#include "chrome/monarch/dynamic_app.h"
-#include "chrome/monarch/dynamic_app_service_factory.h"
-#include "chrome/monarch/monarch_util.h"
-#include "chrome/common/chrome_constants.h"
-#include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/web_applications/web_app.h"
-#include "chrome/browser/web_applications/web_app_mac.h"
-#include "chrome/browser/extensions/unpacked_installer.h"
-
-#include "extensions/browser/extension_system.h"
-#include "extensions/browser/uninstall_reason.h"
-
-#include "chrome/browser/extensions/extension_service.h"
-#include "chrome/browser/extensions/launch_util.h"
-
-#include "chrome/browser/ui/extensions/application_launch.h"
-#include "chrome/browser/ui/extensions/app_launch_params.h"
-#include "chrome/browser/ui/simple_message_box.h"
-
-#include "content/public/browser/web_contents.h"
-#include "content/public/browser/browser_thread.h"
-#include "content/public/browser/site_instance.h"
-
 #include "base/memory/scoped_ptr.h"
 #include "base/files/file_util.h"
 #include "base/files/file.h"
 #include "base/mac/foundation_util.h"
 #include "base/time/time.h"
 #include "base/strings/utf_string_conversions.h"
+#include "chrome/browser/apps/app_shim/app_shim_handler_mac.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/web_applications/web_app.h"
+#include "chrome/browser/web_applications/web_app_mac.h"
+#include "chrome/browser/extensions/unpacked_installer.h"
+#include "chrome/browser/extensions/extension_service.h"
+#include "chrome/browser/extensions/launch_util.h"
+#include "chrome/browser/ui/extensions/application_launch.h"
+#include "chrome/browser/ui/extensions/app_launch_params.h"
+#include "chrome/browser/ui/simple_message_box.h"
+#include "chrome/common/chrome_constants.h"
+#include "chrome/monarch/dynamic_app.h"
+#include "chrome/monarch/dynamic_app_service_factory.h"
+#include "chrome/monarch/monarch_util.h"
+#include "content/public/browser/web_contents.h"
+#include "content/public/browser/browser_thread.h"
+#include "content/public/browser/site_instance.h"
 #include "components/crx_file/id_util.h"
+#include "extensions/browser/extension_system.h"
+#include "extensions/browser/uninstall_reason.h"
+#include "extensions/common/manifest_handlers/file_handler_info.h"
 
 #include "chrome/monarch/dynamic_app_service.h"
 
@@ -122,6 +117,9 @@ void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
       OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_), app->GetWebContents(),
                                       extension, launch_container, NEW_FOREGROUND_TAB,
                                       extensions::SOURCE_MANAGEMENT_API));
+      
+      apps::AppShimHandler* handler = apps::AppShimHandler::GetForAppMode(extension_id);
+      app->AddObserver(handler);
     }
   }
 }
@@ -183,6 +181,7 @@ void DynamicAppService::UninstallApp(const std::string& app_id, const base::File
   //we have to make another check for the app in the map, in case the user has reopened
   //the same page
   if(apps_.find(app_id) == apps_.end()){
+    
     ExtensionService::UninstallExtensionHelper(extension_service_, app_id, extensions::UninstallReason::UNINSTALL_REASON_COMPONENT_REMOVED);
     //Since the extension was originally unpacked, it won't delete the extension source directory. Do that here on the file thread.
     content::BrowserThread::PostTask(content::BrowserThread::FILE, FROM_HERE, base::Bind(

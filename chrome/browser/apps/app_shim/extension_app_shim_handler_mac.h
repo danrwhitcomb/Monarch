@@ -28,6 +28,7 @@ class FilePath;
 
 namespace content {
 class WebContents;
+struct MDAMenuItem;
 }
 
 namespace extensions {
@@ -142,6 +143,9 @@ class ExtensionAppShimHandler : public AppShimHandler,
   // chrome::BrowserListObserver overrides;
   void OnBrowserAdded(Browser* browser) override;
   void OnBrowserRemoved(Browser* browser) override;
+
+  // monarch_app::DynamicApp::Observer overrides;
+  void OnMenuUpdated(Profile* profile, std::string& app_id, monarch_app::DynamicAppMenu* menu) override;
 
  protected:
   typedef std::map<std::pair<Profile*, std::string>, AppShimHandler::Host*>
