@@ -755,13 +755,4 @@ void ExtensionAppShimHandler::OnBrowserRemoved(Browser* browser) {
   }
 }
 
-void ExtensionAppShimHandler::OnMenuUpdated(Profile* profile, std::string& app_id, monarch_app::DynamicAppMenu* menu){
-  AppShimHandler::Host* host = FindHost(profile, app_id);
-  if(host){
-    content::MDAMenuItem root_item = menu->GetRootItem();
-    host->OnMDAMenuUpdated(root_item);
-  }
-}
-
-
 }  // namespace apps

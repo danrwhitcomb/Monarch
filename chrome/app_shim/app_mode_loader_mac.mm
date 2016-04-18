@@ -16,6 +16,8 @@
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/logging.h"
+#include "base/base_switches.h"
+#include "base/debug/debugger.h"
 #include "base/mac/foundation_util.h"
 #include "base/mac/launch_services_util.h"
 #include "base/mac/scoped_nsautorelease_pool.h"
@@ -192,6 +194,7 @@ int LoadFrameworkAndStart(app_mode::ChromeAppModeInfo* info) {
 __attribute__((visibility("default")))
 int main(int argc, char** argv) {
   base::CommandLine::Init(argc, argv);
+  
   app_mode::ChromeAppModeInfo info;
 
   // Hard coded info parameters.

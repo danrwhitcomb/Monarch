@@ -39,6 +39,8 @@ base::FilePath GetProfilePath();
 
 base::FilePath GetParentPath(const base::FilePath& path);
 
+std::string GetCurrentTime();
+
 }
 
 #endif /* monarch_util_h */

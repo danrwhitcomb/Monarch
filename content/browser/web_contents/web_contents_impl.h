@@ -374,6 +374,7 @@ class CONTENT_EXPORT WebContentsImpl
   void HasManifest(const HasManifestCallback& callback) override;
   void ExitFullscreen() override;
   void ResumeLoadingCreatedWebContents() override;
+  void RequestMDAMenu() override;
 #if defined(OS_ANDROID)
   void OnMediaSessionStateChanged();
   void ResumeMediaSession() override;

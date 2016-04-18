@@ -159,6 +159,8 @@ class CONTENT_EXPORT RenderFrameHostImpl
   void InsertVisualStateCallback(
       const VisualStateCallback& callback) override;
   bool IsRenderFrameLive() override;
+  void RequestMDAMenu() override;
+
 
   // IPC::Sender
   bool Send(IPC::Message* msg) override;

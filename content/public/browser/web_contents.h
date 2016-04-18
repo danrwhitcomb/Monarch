@@ -676,6 +676,10 @@ class WebContents : public PageNavigator,
   // should not yet be resumed. Then the client is responsible for calling this
   // as soon as they are ready.
   virtual void ResumeLoadingCreatedWebContents() = 0;
+  
+  //Requests the render to send a FrameHostMsg_UpdateMDAMenu
+  //message with the current MDAMenu
+  virtual void RequestMDAMenu() {}
 
 #if defined(OS_ANDROID)
   // Requests to resume the current media session.

@@ -5,17 +5,24 @@
 #include <string>
 #include <map>
 
+#import <Cocoa/Cocoa.h>
+
 #include "base/files/file_path.h"
 #include "base/files/file.h"
 #include "base/files/file_util.h"
+#include "base/strings/utf_string_conversions.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/web_applications/web_app.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/monarch/dynamic_app_service.h"
 #include "chrome/monarch/monarch_util.h"
+#include "chrome/browser/app_controller_mac.h"
+#include "chrome/browser/ui/cocoa/apps/app_shim_menu_controller_mac.h"
 #include "components/crx_file/id_util.h"
 #include "content/common/frame_messages.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/browser_thread.h"
+#include "extensions/common/extension.h"
 
 #include "chrome/monarch/dynamic_app.h"
 
@@ -36,34 +43,61 @@ scoped_refptr<DynamicApp> DynamicApp::Create(const DynamicAppParams& params){
 
 DynamicApp::DynamicApp(const DynamicAppParams& params):
   app_name_(params.app_name),
-  contents_(params.contents),
+  contents_(nullptr),
   url_(params.url),
   profile_path_(params.profile_path){
   
-    FilePath dir = GetTempExtDirectory(profile_path_).Append(crx_file::id_util::GenerateId(app_name_));
+    std::string time = GetCurrentTime();
+  
+    FilePath dir = GetTempExtDirectory(profile_path_).Append(crx_file::id_util::GenerateId(app_name_ + time));
     extension_path_ = dir.Append("1.0_0");
     
     extension_id_ = crx_file::id_util::GenerateIdForPath(extension_path_);
-    
-    //Setup observer
-    Observe(contents_);
 }
   
 
-DynamicApp::~DynamicApp(){
-  if(contents_){
-    delete contents_;
-  }
+DynamicApp::~DynamicApp(){}
+
+DynamicAppMenu* DynamicApp::GetMenu(){
+  return menu_.get();
 }
 
 void DynamicApp::SetMenu(scoped_ptr<DynamicAppMenu> menu){
   menu_.reset(menu.release());
-  NotifyMenuChange();
+}
+
+void DynamicApp::RefreshMenu(){
+  if(contents_)
+    contents_->RequestMDAMenu();
+}
+
+void DynamicApp::NotifyMenuChange(){
+  AppController* controller = [NSApp delegate];
+  AppShimMenuController* menu_controller = [controller getAppShimMenuController];
+  
+  if(extension_ && menu_controller)
+    [menu_controller refreshAppMenu:extension_];
 }
 
 void DynamicApp::OnUpdateMDAMenu(const MDAMenuItem& menu){
   scoped_ptr<DynamicAppMenu> new_menu = DynamicAppMenu::CreateWithMenu(menu);
   SetMenu(std::move(new_menu));
+  NotifyMenuChange();
+}
+
+void DynamicApp::ExecuteActionForItem(std::string& title){
+  MDAMenuItem item = menu_->GetItem(title);
+  RenderFrameHost* host = contents_->GetMainFrame();
+  base::string16 action16 = base::UTF8ToUTF16(item.action);
+  host->Send(new FrameMsg_JavaScriptExecuteRequest(host->GetRoutingID(),
+                                             action16,
+                                             0, false));
+}
+
+
+void DynamicApp::DocumentLoadedInFrame(content::RenderFrameHost* render_frame_host){
+  if(contents_->GetMainFrame() == render_frame_host)
+    RefreshMenu();
 }
 
 
@@ -71,6 +105,7 @@ void DynamicApp::OnUpdateMDAMenu(const MDAMenuItem& menu){
 std::string DynamicApp::GetExtensionID(){ return extension_id_; }
 std::string DynamicApp::GetAppName(){ return app_name_; }
 content::WebContents* DynamicApp::GetWebContents(){ return contents_; }
+extensions::Extension* DynamicApp::GetExtension(){ return extension_; }
 GURL DynamicApp::GetURL(){ return url_; }
 
 
@@ -93,19 +128,27 @@ void DynamicApp::SetExtensionID(std::string extension_id){ extension_id_ = exten
  
 //Observer handlers
 void DynamicApp::AddObserver(Observer* observer){
-  observers_.AddObserver(observer);
+  if(!observers_.HasObserver(observer))
+    observers_.AddObserver(observer);
+    RefreshMenu();
 }
 
 void DynamicApp::RemoveObserver(Observer* observer){
-  observers_.RemoveObserver(observer);
-}
-  
-//Notifying observers
-void DynamicApp::NotifyMenuChange(){
-  FOR_EACH_OBSERVER(Observer, observers_, OnMenuUpdated(Profile::FromBrowserContext(contents_->GetBrowserContext()), extension_id_, menu_.get()));
+  if(observers_.HasObserver(observer))
+    observers_.RemoveObserver(observer);
 }
 
 //Private
+void DynamicApp::SetWebContents(content::WebContents* contents){
+  contents_ = contents;
+  Observe(contents_);
+}
+
+void DynamicApp::SetExtension(const extensions::Extension* extension){
+  extension_ = const_cast<extensions::Extension*>(extension);
+}
+
+
 bool DynamicApp::CopyBaseExtension(){
   base::FilePath ext_dir = GetParentPath(GetExtensionPath());
   if(!base::DirectoryExists(ext_dir)){
@@ -125,12 +168,10 @@ bool DynamicApp::CopyBaseExtension(){
 }
 
 void DynamicApp::SetupMockExtension(){
-
   CopyBaseExtension();
-
-  ReplaceHTMLData();
-  ReplaceManifestData();
   ReplaceBackgroundJSData();
+  ReplaceManifestData();
+  ReplaceHTMLData();
 }
 
 

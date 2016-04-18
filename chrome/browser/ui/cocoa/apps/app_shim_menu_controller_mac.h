@@ -12,6 +12,14 @@
 
 @class DoppelgangerMenuItem;
 
+namespace content {
+  struct MDAMenuItem;
+}
+
+namespace extensions {
+  class Extension;
+}
+
 // This controller listens to NSWindowDidBecomeMainNotification and
 // NSWindowDidResignMainNotification and modifies the main menu bar to mimic a
 // main menu for the app. When an app window becomes main, all Chrome menu items
@@ -38,7 +46,13 @@
   // Additional menu items for hosted apps.
   base::scoped_nsobject<NSMenuItem> viewMenuItem_;
   base::scoped_nsobject<NSMenuItem> historyMenuItem_;
+  
+  NSMutableArray* menuItems_;
 }
+
+- (void)refreshAppMenu:(extensions::Extension*) app;
+- (void)onMDAMenuItemSelected:(id)sender;
+
 
 @end
 

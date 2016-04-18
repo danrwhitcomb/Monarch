@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#include <ctime>
+
 #include "chrome/monarch/monarch_util.h"
 #include "base/strings/string16.h"
 #include "base/strings/sys_string_conversions.h"
@@ -100,7 +102,7 @@ base::FilePath GetTempExtDirectory(base::FilePath& profile_path){
     return base::FilePath();
   //TODO: Fix the hardcoding of this path.... Couldn't find the
   //right method/constant
-  return profile_path.Append("Extensions/");
+  return profile_path.Append("MDAExtensions/");
 }
 
 base::FilePath GetBaseExtPath(){
@@ -118,6 +120,19 @@ base::FilePath GetParentPath(const base::FilePath& path){
   }
   
   return new_path;
+}
+
+std::string GetCurrentTime(){
+  time_t rawtime;
+  struct tm * timeinfo;
+  char buffer[80];
+  
+  time (&rawtime);
+  timeinfo = localtime(&rawtime);
+  
+  strftime(buffer,80,"%d-%m-%Y %I:%M:%S",timeinfo);
+  std::string str(buffer);
+  return str;
 }
 
 }

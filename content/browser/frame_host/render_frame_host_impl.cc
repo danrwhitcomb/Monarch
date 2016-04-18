@@ -2129,6 +2129,11 @@ bool RenderFrameHostImpl::IsRenderFrameLive() {
   return is_live;
 }
 
+void RenderFrameHostImpl::RequestMDAMenu(){
+  Send(new FrameMsg_RequestMDAMenu(routing_id_));
+}
+
+
 #if defined(OS_WIN)
 
 void RenderFrameHostImpl::SetParentNativeViewAccessible(

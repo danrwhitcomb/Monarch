@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef dynamic_app_h
-#define dynamic_app_h
+#ifndef CHROME_MONARCH_DYNAMIC_APP_H_
+#define CHROME_MONARCH_DYNAMIC_APP_H_
 
 #include <stdio.h>
 #include <string>
@@ -16,6 +16,7 @@
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/monarch/dynamic_app_menu.h"
 #include "content/public/browser/web_contents_observer.h"
+#include "extensions/common/extension.h"
 
 namespace content {
   struct MDAMenuItem;
@@ -33,7 +34,6 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
       ~DynamicAppParams();
       
       std::string app_name; // Display name for the application
-      content::WebContents* contents; //WebContents associated with app_shim. Not required
       GURL url; // url of app
       base::FilePath profile_path;
     };
@@ -41,7 +41,7 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
      class Observer {
      public:
        
-       virtual void OnMenuUpdated(Profile* profile, std::string& app_id, DynamicAppMenu* menu){}
+       virtual void OnMenuUpdated(DynamicAppMenu* menu){}
        ~Observer(){}
      };
                      
@@ -49,7 +49,11 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
     //Creaters
     static scoped_refptr<DynamicApp> Create(const DynamicAppParams& params);
   
+    DynamicAppMenu* GetMenu();
     void SetMenu(scoped_ptr<DynamicAppMenu> menu);
+    void RefreshMenu();
+    void NotifyMenuChange();
+    void ExecuteActionForItem(std::string& title);
   
     //Copying over the extension
     bool CopyBaseExtension();
@@ -60,6 +64,7 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
     std::string GetAppName();
     GURL GetURL();
     content::WebContents* GetWebContents();
+    extensions::Extension* GetExtension();
   
     std::string GetPlainAppURL();
   
@@ -73,21 +78,26 @@ class DynamicApp : public base::RefCountedThreadSafe<DynamicApp>,
      void RemoveObserver(Observer* observer);
      
      //Notify observers
-     void NotifyMenuChange();
     
     //WebContentsObserver
     void OnUpdateMDAMenu(const content::MDAMenuItem&) override;
+    void DocumentLoadedInFrame(content::RenderFrameHost* render_frame_host) override;
   
   private:
     friend class base::RefCountedThreadSafe<DynamicApp>;
+    friend class DynamicAppService;
   
     //constructors
     DynamicApp(const DynamicAppParams& params);
+    void SetWebContents(content::WebContents* contents);
+    void SetExtension(const extensions::Extension* extension);
+
   
     //Characteristic data
     std::string app_name_;
     std::string extension_id_;
     content::WebContents* contents_;
+    extensions::Extension* extension_;
     GURL url_;
     base::FilePath extension_path_;
     base::FilePath profile_path_;

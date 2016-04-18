@@ -4,19 +4,27 @@
 
 #import "chrome/browser/ui/cocoa/apps/app_shim_menu_controller_mac.h"
 
+#include <vector>
+#include <string>
+
 #include "base/command_line.h"
 #include "base/mac/scoped_nsautorelease_pool.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/apps/app_shim/extension_app_shim_handler_mac.h"
+#include "chrome/browser/app_controller_mac.h"
 #include "chrome/browser/apps/app_window_registry_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
 #import "chrome/browser/ui/cocoa/apps/native_app_window_cocoa.h"
+#include "chrome/monarch/dynamic_app.h"
+#include "chrome/monarch/dynamic_app_service.h"
+#include "chrome/monarch/dynamic_app_service_factory.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/grit/generated_resources.h"
+#include "content/public/common/mda_menu_item.h"
 #include "extensions/browser/app_window/app_window.h"
 #include "extensions/common/extension.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -335,6 +343,18 @@ void SetChromeCyclesWindows(int sequence_number) {
 @interface AppShimMenuController ()
 // Construct the NSMenuItems for apps.
 - (void)buildAppMenuItems;
+//Refresh's the app menu in case it has been updated
+- (void)refreshAppMenu:(extensions::Extension*) app;
+// Transfers menu items from MDA to NSMenuItems
+- (void)setMenuItemsForApp:(const extensions::Extension*) app;
+// Resets the menu, and adds MDAItems in correct spots in tree
+- (void)updateMDAMenuItems:(content::MDAMenuItem*) rootItem;
+// Event triggered when an MDAItem is selected
+- (void)onMDAMenuItemSelected:(id)sender;
+// Checks if a word is the name of a system menu item
+- (BOOL)isSystemMenu:(NSString*)title;
+// Recursively adds a list of children and their children to a NSMenuItem
+-(void)addChildrenToItem:(std::vector<content::MDAMenuItem>) children item:(NSMenuItem*) item;
 // Register for NSWindow notifications.
 - (void)registerEventHandlers;
 // If the window is an app window, add or remove menu items.
@@ -360,6 +380,7 @@ void SetChromeCyclesWindows(int sequence_number) {
 
 - (id)init {
   if ((self = [super init])) {
+    menuItems_ = [[NSMutableArray alloc] init];
     [self buildAppMenuItems];
     [self registerEventHandlers];
   }
@@ -467,6 +488,106 @@ void SetChromeCyclesWindows(int sequence_number) {
   AddDuplicateItem(windowMenuItem_, IDC_WINDOW_MENU, IDC_MAXIMIZE_WINDOW);
   [[windowMenuItem_ submenu] addItem:[NSMenuItem separatorItem]];
   [[windowMenuItem_ submenu] addItem:[allToFrontDoppelganger_ menuItem]];
+  
+  menuItems_ = [[NSMutableArray alloc] init];
+  [menuItems_ addObject:appMenuItem_];
+  [menuItems_ addObject:fileMenuItem_];
+  [menuItems_ addObject:editMenuItem_];
+  [menuItems_ addObject:windowMenuItem_];
+}
+
+- (void)refreshAppMenu:(extensions::Extension*) app {
+  if(app->id() == appId_){
+    [self removeMenuItems];
+    [self setMenuItemsForApp: app];
+    [self addMenuItems:app];
+  }
+}
+
+-(void)updateMDAMenuItems:(content::MDAMenuItem*) rootItem{
+  // First, reset menu to wipe old MDAItems
+  [self buildAppMenuItems];
+  
+  if(rootItem->children.size() == 0 || rootItem->children[0].title != "app"){
+    return;
+  }
+  
+  int index = 3;
+  
+  // Next, for the already existing items,
+  // we add in the child items
+  for(size_t i=0; i < rootItem->children.size(); i++){
+    
+    content::MDAMenuItem top_child = rootItem->children[i];
+    NSString* title = base::SysUTF8ToNSString(top_child.title);
+    
+    if([title isEqualToString:@"app"]){
+        [self addChildrenToItem:top_child.children item:appMenuItem_];
+    } else if([title isEqualToString:l10n_util::GetNSString(IDS_FILE_MENU_MAC)]){
+        [self addChildrenToItem:top_child.children item:fileMenuItem_];
+    } else if([title isEqualToString:l10n_util::GetNSString(IDS_EDIT_MENU_MAC)]){
+        [self addChildrenToItem:top_child.children item:editMenuItem_];
+
+    } else if([title isEqualToString:l10n_util::GetNSString(IDS_WINDOW_MENU_MAC)]){
+        [self addChildrenToItem:top_child.children item:windowMenuItem_];
+    } else {
+      NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle:title action:@selector(onMDAMenuItemSelected:) keyEquivalent:@""];
+      [new_item setEnabled:top_child.enabled];
+      
+      [self addChildrenToItem:top_child.children item:new_item];
+      [menuItems_ insertObject:new_item atIndex:index];
+      index++;
+    }
+  }
+  
+}
+
+-(BOOL)isSystemMenu:(NSString*)title{
+  return [title isEqualToString:l10n_util::GetNSString(IDS_FILE_MENU_MAC)] ||
+         [title isEqualToString:l10n_util::GetNSString(IDS_EDIT_MENU_MAC)] ||
+         [title isEqualToString:l10n_util::GetNSString(IDS_WINDOW_MENU_MAC)] ||
+         [title isEqualToString:@"app"];
+}
+
+-(void)addChildrenToItem:(std::vector<content::MDAMenuItem>) children item:(NSMenuItem*) item {
+  
+  NSMenu* submenu = [item hasSubmenu] ? [item submenu] : [[NSMenu alloc] initWithTitle:[item title]];
+  [submenu setAutoenablesItems:NO];
+  
+  //Run through all the children and make new items, add the submenu to the current item
+  int i = 0;
+  for(auto& child : children){
+    NSMenuItem* child_item = [[NSMenuItem alloc] initWithTitle:base::SysUTF8ToNSString(child.title)
+                                                 action:@selector(onMDAMenuItemSelected:)
+                                                 keyEquivalent:@""];
+    [child_item setEnabled:child.enabled];
+    [child_item setTarget:self];
+    [submenu insertItem:child_item atIndex:i];
+    
+    //Recurse if any of the children have submenus
+    if(child.children.size() != 0){
+      [self addChildrenToItem:child.children item:child_item];
+    }
+    i++;
+  }
+  
+  [item setSubmenu:submenu];
+}
+
+
+-(void)onMDAMenuItemSelected:(id)sender {
+  AppController* controller = [NSApp delegate];
+  
+  if(controller){
+    Profile* profile = [controller lastProfile];
+    scoped_refptr<monarch_app::DynamicAppService> service =
+      monarch_app::DynamicAppServiceFactory::GetForContext(profile);
+    scoped_refptr<monarch_app::DynamicApp> app = service->GetAppWithID(appId_);
+    
+    NSMenuItem* item = (NSMenuItem*)sender;
+    std::string titleSTR = base::SysNSStringToUTF8([item title]);
+    app->ExecuteActionForItem(titleSTR);
+  }
 }
 
 - (void)registerEventHandlers {
@@ -525,6 +646,22 @@ void SetChromeCyclesWindows(int sequence_number) {
   }
 }
 
+- (void)setMenuItemsForApp:(const Extension*) app {
+  AppController* controller = [NSApp delegate];
+  content::MDAMenuItem rootItem;
+  
+  if(controller){
+    Profile* profile = [controller lastProfile];
+    scoped_refptr<monarch_app::DynamicAppService> service = monarch_app::DynamicAppServiceFactory::GetForContext(profile);
+    monarch_app::DynamicApp* mda_app = service->GetAppWithID(app->id());
+    
+    if(mda_app->GetMenu()){
+      rootItem = mda_app->GetMenu()->GetRootItem();
+    }
+  }
+  [self updateMDAMenuItems:&rootItem];
+}
+
 - (void)appBecameMain:(const Extension*)app {
   if (appId_ == app->id())
     return;
@@ -533,6 +670,13 @@ void SetChromeCyclesWindows(int sequence_number) {
     [self removeMenuItems];
 
   appId_ = app->id();
+  
+  [self buildAppMenuItems];
+  
+  if(app->is_lifespan_dynamic()){
+    [self setMenuItemsForApp:app];
+  }
+  
   [self addMenuItems:app];
   if (IsAppWindowCyclingEnabled()) {
     base::MessageLoop::current()->PostTask(
@@ -570,24 +714,41 @@ void SetChromeCyclesWindows(int sequence_number) {
   [openDoppelganger_ enableForApp:app];
   [closeWindowDoppelganger_ enableForApp:app];
 
-  [appMenuItem_ setTitle:base::SysUTF8ToNSString(appId_)];
-  [[appMenuItem_ submenu] setTitle:title];
+  if(!app->is_lifespan_dynamic()){
+    [appMenuItem_ setTitle:base::SysUTF8ToNSString(appId_)];
+    [[appMenuItem_ submenu] setTitle:title];
 
-  [mainMenu addItem:appMenuItem_];
-  [mainMenu addItem:fileMenuItem_];
+    [mainMenu addItem:appMenuItem_];
+    [mainMenu addItem:fileMenuItem_];
 
-  SetItemWithTagVisible(editMenuItem_,
-                        IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE,
-                        app->is_hosted_app(), true);
-  SetItemWithTagVisible(editMenuItem_, IDC_FIND_MENU, app->is_hosted_app(),
-                        false);
-  [mainMenu addItem:editMenuItem_];
+    SetItemWithTagVisible(editMenuItem_,
+                          IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE,
+                          app->is_hosted_app(), true);
+    SetItemWithTagVisible(editMenuItem_, IDC_FIND_MENU, app->is_hosted_app(),
+                          false);
+    [mainMenu addItem:editMenuItem_];
 
-  if (app->is_hosted_app()) {
-    [mainMenu addItem:viewMenuItem_];
-    [mainMenu addItem:historyMenuItem_];
+    if (app->is_hosted_app()) {
+      [mainMenu addItem:viewMenuItem_];
+      [mainMenu addItem:historyMenuItem_];
+    }
+    [mainMenu addItem:windowMenuItem_];
+    
+  } else {
+  
+    [appMenuItem_ setTitle:base::SysUTF8ToNSString(appId_)];
+    [[appMenuItem_ submenu] setTitle:title];
+  
+    SetItemWithTagVisible(editMenuItem_,
+                          IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE,
+                          app->is_hosted_app(), true);
+    SetItemWithTagVisible(editMenuItem_, IDC_FIND_MENU, app->is_hosted_app(),
+                          false);
+
+    for(NSMenuItem* item in menuItems_){
+      [mainMenu addItem:item];
+    }
   }
-  [mainMenu addItem:windowMenuItem_];
 }
 
 - (void)removeMenuItems {

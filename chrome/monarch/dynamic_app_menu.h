@@ -21,7 +21,7 @@ class DynamicAppMenu {
     ~DynamicAppMenu();
 
     content::MDAMenuItem GetRootItem();
-    content::MDAMenuItem GetItem(std::string title);
+    content::MDAMenuItem GetItem(std::string& title);
     void ParseMenu(const content::MDAMenuItem& menu);
   
   private:

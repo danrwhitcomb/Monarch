@@ -10,17 +10,12 @@
 
 #include "base/files/file_path.h"
 #include "chrome/common/mac/app_shim_launch.h"
-#include "chrome/monarch/dynamic_app.h"
-
-namespace content {
-  struct MDAMenuItem;
-}
 
 namespace apps {
 
 // Registrar, and interface for services that can handle interactions with OSX
 // shim processes.
-class AppShimHandler : public monarch_app::DynamicApp::Observer {
+class AppShimHandler {
  public:
   class Host {
    public:
@@ -36,9 +31,6 @@ class AppShimHandler : public monarch_app::DynamicApp::Observer {
     virtual void OnAppUnhideWithoutActivation() = 0;
     // Invoked when the app is requesting user attention.
     virtual void OnAppRequestUserAttention(AppShimAttentionType type) = 0;
-    
-    //MDAMenu Handlers
-    virtual void OnMDAMenuUpdated(content::MDAMenuItem& menu) = 0;
 
     // Allows the handler to determine which app this host corresponds to.
     virtual base::FilePath GetProfilePath() const = 0;

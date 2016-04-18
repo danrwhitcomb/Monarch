@@ -1,3 +1,4 @@
+
  // Copyright (c) 2015 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -8,6 +9,7 @@
 #include "base/memory/scoped_ptr.h"
 #include "base/files/file_util.h"
 #include "base/files/file.h"
+#include "base/files/file_enumerator.h"
 #include "base/mac/foundation_util.h"
 #include "base/time/time.h"
 #include "base/strings/utf_string_conversions.h"
@@ -29,7 +31,9 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/site_instance.h"
 #include "components/crx_file/id_util.h"
+#include "extensions/browser/extension_host.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/browser/process_manager.h"
 #include "extensions/browser/uninstall_reason.h"
 #include "extensions/common/manifest_handlers/file_handler_info.h"
 
@@ -56,23 +60,22 @@ DynamicAppService::DynamicAppService(BrowserContext* context):
     GetForProfile(Profile::FromBrowserContext(context));
     
   monitor->AddObserver(this);
+  
+  //Subscribe to process manager
+  extensions::ProcessManager* manager = extensions::ProcessManager::Get(context);
+  if(manager){
+    manager->AddObserver(this);
+  }
+  
+  content::BrowserThread::PostTask(content::BrowserThread::FILE,
+  FROM_HERE, base::Bind(&monarch_app::DynamicAppService::CleanupOldApps, this));
 }
 
 //static
 void DynamicAppService::LaunchAppWithURL(GURL& url, BrowserContext* context){
-
-  content::WebContents* web_contents(content::WebContents::Create(content::WebContents::CreateParams(context)));
-  
-  //Setup loading params
-  content::NavigationController::LoadURLParams params(url);
-  params.can_load_local_resources = true;
-  
-  //Load url and build
-  web_contents->GetController().LoadURLWithParams(params);
   monarch_app::DynamicAppServiceFactory::GetForContext(context)->
-    BuildAppFromContents(web_contents);
+    BuildApp(url);
 }
-
 
 //static
 void DynamicAppService::LaunchAppWithContents(WebContents* contents){
@@ -81,8 +84,9 @@ void DynamicAppService::LaunchAppWithContents(WebContents* contents){
 //  scoped_ptr<web_app::ShortcutInfo> info = web_app::GetShortcutInfoForTab(contents);
   scoped_refptr<monarch_app::DynamicAppService> service =
     monarch_app::DynamicAppServiceFactory::GetForContext(contents->GetBrowserContext());
-  service->BuildAppFromContents(contents->Clone());
-  //contents->Close();
+  GURL url = contents->GetURL();
+  service->BuildApp(url);
+  contents->Close();
 }
 
 
@@ -103,32 +107,36 @@ void DynamicAppService::DoUnpackedExtensionLoad(const base::FilePath& ext_path){
 void DynamicAppService::LaunchDynamicApp(const extensions::Extension* extension,
                                          const base::FilePath& file_path,
                                          const std::string& error){
-  
   if(error.empty()){
     
     std::string extension_id = extension->id();
     scoped_refptr<DynamicApp> app = apps_[extension_id];
   
     if(app){
-      //Launch app
+      app->SetExtension(extension);
+//     Launch app
       extensions::LaunchContainer launch_container =
       GetLaunchContainer(extensions::ExtensionPrefs::Get(browser_context_), extension);
       
-      OpenApplication(AppLaunchParams(Profile::FromBrowserContext(browser_context_), app->GetWebContents(),
-                                      extension, launch_container, NEW_FOREGROUND_TAB,
-                                      extensions::SOURCE_MANAGEMENT_API));
+      AppLaunchParams params =
+        AppLaunchParams(Profile::FromBrowserContext(browser_context_), app->GetWebContents(), extension, launch_container,
+            NEW_FOREGROUND_TAB,extensions::SOURCE_MANAGEMENT_API);
       
-      apps::AppShimHandler* handler = apps::AppShimHandler::GetForAppMode(extension_id);
-      app->AddObserver(handler);
+      OpenApplication(params);
+      
+      //Add temp file
+      content::BrowserThread::PostTask(content::BrowserThread::FILE,
+                                       FROM_HERE,
+                                       base::Bind(&monarch_app::DynamicAppService::AddTempShortcutIndicator, this, extension));
     }
   }
+  
 }
 
-bool DynamicAppService::BuildAppFromContents(content::WebContents* contents){
+bool DynamicAppService::BuildApp(GURL& url){
   DynamicApp::DynamicAppParams params;
-  params.app_name = GenerateAppNameFromURL(contents->GetURL());
-  params.contents = contents;
-  params.url = contents->GetURL();
+  params.app_name = GenerateAppNameFromURL(url);
+  params.url = url;
   params.profile_path = browser_context_->GetPath();
   
   scoped_refptr<DynamicApp> app_ptr = DynamicApp::Create(params);
@@ -143,21 +151,26 @@ bool DynamicAppService::BuildAppFromContents(content::WebContents* contents){
   return true;
 }
 
-//Probably useful in the future
-void DynamicAppService::OnAppStart(Profile* profile, const std::string& app_id){}
+void DynamicAppService::OnExtensionFrameRegistered(const std::string&extension_id,
+                                                   content::RenderFrameHost* render_frame_host){
+  if(HasAppWithID(extension_id)){
+    DynamicApp* app = GetAppWithID(extension_id);
+    
+    WebContents* contents = WebContents::FromRenderFrameHost(render_frame_host);
+    if(contents && app){
+      app->SetWebContents(contents);
+    }
+  }
+}
 
-void DynamicAppService::OnAppStop(Profile* profile, const std::string& app_id){
-
-  //We only want to handle apps in our list
-  if(apps_.find(app_id) != apps_.end()){
-    base::FilePath extension_path = apps_[app_id]->GetExtensionPath();
-    apps_.erase(app_id);
+void DynamicAppService::OnExtensionFrameUnregistered(const std::string& extension_id,
+                                                       content::RenderFrameHost* render_frame_host){
+  if(HasAppWithID(extension_id)){
+    base::FilePath extension_path = apps_[extension_id]->GetExtensionPath();
+    apps_.erase(extension_id);
     
     //Wait a few seconds to delete, else we might be destroying the wrong object
-    UninstallApp(app_id, extension_path);
-//    content::BrowserThread::PostDelayedTask(content::BrowserThread::UI,
-//          FROM_HERE, base::Bind(&monarch_app::DynamicAppService::UninstallApp,
-//                                this, app_id, extension_path), base::TimeDelta::FromMilliseconds(1));
+    UninstallApp(extension_id, extension_path);
   }
 }
 
@@ -171,6 +184,41 @@ void DynamicAppService::OnChromeTerminating(){
     if(base::PathExists(extension_path)){
       UninstallApp(app_id, extension_path);
     }
+  }
+}
+
+void DynamicAppService::AddTempShortcutIndicator(const extensions::Extension* app){
+  //Get path of shortcut directory
+  base::FilePath prof_path = browser_context_->GetPath();
+  base::FilePath shortcut_dir = GetTempAppDirectory(prof_path).Append("_crx_" + app->id());
+  
+  //Write an empty file to dir
+  base::WriteFile(shortcut_dir.Append(".temp"), "", 0);
+}
+
+void DynamicAppService::CleanupOldApps(){
+  base::FilePath prof_path = browser_context_->GetPath();
+  base::FilePath temp_ext_dir = GetTempExtDirectory(prof_path);
+  
+  //Delete Extension Directory
+  base::DeleteFile(temp_ext_dir, true);
+  
+  //Delete all shortcuts that have the .temp file in their directories
+  base::FilePath shortcuts_dir = GetTempAppDirectory(prof_path);
+  std::vector<base::FilePath> paths_to_delete;
+  
+  base::FileEnumerator enumer(shortcuts_dir, false, base::FileEnumerator:: DIRECTORIES);
+ 
+  //Find all the paths to delete and save them so we don't delete in place
+  for (base::FilePath dir = enumer.Next(); !dir.empty(); dir = enumer.Next()){
+    if(base::PathExists(dir.Append(".temp"))){
+      paths_to_delete.push_back(dir);
+    }
+  }
+  
+  //Delete them after finding them
+  for(base::FilePath dir : paths_to_delete){
+    base::DeleteFile(dir, true);
   }
 }
 
@@ -195,8 +243,16 @@ void DynamicAppService::DeleteExtensionFiles(const base::FilePath& extension_pat
 }
 
 DynamicApp* DynamicAppService::GetAppWithID(const std::string& app_id){
-  return apps_[app_id].get(); //Bet you can't guess what this does
+  if(HasAppWithID(app_id))
+    return apps_[app_id].get(); //Bet you can't guess what this does
+  else
+    return nullptr;
 }
+
+bool DynamicAppService::HasAppWithID(const std::string& app_id){
+  return apps_.find(app_id) != apps_.end();
+}
+
 
 void DynamicAppService::ShowErrorForURL(GURL& url){
   std::string url_mesg("Unable to create a desktop app from the url: " + url.GetContent())

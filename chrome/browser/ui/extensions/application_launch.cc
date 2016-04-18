@@ -208,8 +208,8 @@ WebContents* OpenApplicationWindow(const AppLaunchParams& params,
       (extension ? ui::PAGE_TRANSITION_AUTO_BOOKMARK
                  : ui::PAGE_TRANSITION_AUTO_TOPLEVEL);
 
-  WebContents* web_contents = params.contents ? params.contents :
-      chrome::AddSelectedTabWithURL(browser, url, transition);
+  WebContents* web_contents = chrome::AddSelectedTabWithURL(browser, url, transition);
+  
   web_contents->GetMutableRendererPrefs()->can_accept_load_drops = false;
   web_contents->GetRenderViewHost()->SyncRendererPrefs();
 
@@ -319,6 +319,7 @@ WebContents* OpenEnabledApplication(const AppLaunchParams& params) {
   WebContents* tab = NULL;
   ExtensionPrefs* prefs = ExtensionPrefs::Get(profile);
   prefs->SetActiveBit(extension->id(), true);
+
 
   if (CanLaunchViaEvent(extension)) {
     // Remember what desktop the launch happened on so that when the app opens a

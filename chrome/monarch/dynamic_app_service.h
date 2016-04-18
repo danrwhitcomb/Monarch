@@ -2,23 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_MONARCH_DYNAMIC_APP_MANAGER_H_
-#define CHROME_MONARCH_DYNAMIC_APP_MANAGER_H_
+#ifndef CHROME_MONARCH_DYNAMIC_APP_SERVICE_H_
+#define CHROME_MONARCH_DYNAMIC_APP_SERVICE_H_
 
 #include <stdio.h>
 #include <map>
 
 #include "apps/app_lifetime_monitor.h"
 #include "apps/app_lifetime_monitor_factory.h"
+#include "base/memory/scoped_ptr.h"
 #include "chrome/browser/web_applications/web_app_mac.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/monarch/dynamic_app.h"
-#include "extensions/browser/extension_prefs.h"
-#include "extensions/common/extension.h"
-#include "content/public/browser/web_contents.h"
-#include "base/memory/scoped_ptr.h"
 #include "components/keyed_service/core/refcounted_keyed_service.h"
+#include "content/public/browser/web_contents.h"
+#include "extensions/browser/extension_prefs.h"
+#include "extensions/browser/process_manager_observer.h"
+#include "extensions/common/extension.h"
 
 class Profile;
 
@@ -33,35 +34,45 @@ using namespace content;
 using namespace web_app;
 
 class DynamicAppService : public RefcountedKeyedService,
-                          public apps::AppLifetimeMonitor::Observer {
+                          public apps::AppLifetimeMonitor::Observer,
+                          public extensions::ProcessManagerObserver {
   public:
-    //Handles dynamically creating and destroying
+    
+    DynamicAppService(BrowserContext* context);
 
+  
+    //Handles dynamically creating and destroying
     static void LaunchAppWithContents(WebContents* contents);
     static void LaunchAppWithURL(GURL& url, BrowserContext* context);
-                            
-    DynamicAppService(BrowserContext* context);
-    void ShutdownOnUIThread() override;
-  
-    bool BuildAppFromContents(content::WebContents* contents);
     
+    bool BuildApp(GURL& url);
     void LaunchDynamicApp(const extensions::Extension* extension,
                           const base::FilePath& file_path,
                           const std::string& error);
     
     DynamicApp* GetAppWithID(const std::string& app_id);
+    bool HasAppWithID(const std::string& app_id);
     DynamicApp* GetAppWithContents(WebContents* contents);
     
+    void AddTempShortcutIndicator(const extensions::Extension* app);
+    void CleanupOldApps();
     void UninstallApp(const std::string& app_id,
                       const base::FilePath& extension_path);
-                  
+     
+    //scoped_refptr override
+    void ShutdownOnUIThread() override;
     
     //AppLifetimeMonitor Overrides
-    void OnAppStart(Profile* profile, const std::string& app_id) override;
-    void OnAppStop(Profile* profile, const std::string& app_id) override;
+//    void OnAppStart(Profile* profile, const std::string& app_id) override;
+//    void OnAppStop(Profile* profile, const std::string& app_id) override;
     void OnChromeTerminating() override;
     
-
+    //ProcessManagerObserver Overrides
+    void OnExtensionFrameRegistered(const std::string&extension_id,
+                                    content::RenderFrameHost* render_frame_host) override;
+    void OnExtensionFrameUnregistered(const std::string& extension_id,
+                                      content::RenderFrameHost* render_frame_host) override;
+                            
   private:
   
     void DoUnpackedExtensionLoad(const base::FilePath& ext_path);

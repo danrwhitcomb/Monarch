@@ -1638,6 +1638,11 @@ void WebContentsImpl::ExitFullscreenMode() {
                     DidToggleFullscreenModeForTab(IsFullscreenForCurrentTab()));
 }
 
+void WebContentsImpl::RequestMDAMenu() {
+  RenderFrameHost* host = GetMainFrame();
+  host->RequestMDAMenu();
+}
+
 bool WebContentsImpl::IsFullscreenForCurrentTab() const {
   return delegate_ ? delegate_->IsFullscreenForTabOrPending(this) : false;
 }

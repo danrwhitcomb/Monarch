@@ -25,7 +25,6 @@ namespace content {
   struct MDAMenuItem;
 }
 
-struct AppShimMsg_MenuItemDTO;
 
 // This is the counterpart to AppShimController in
 // chrome/app/chrome_main_app_mode_mac.mm. The AppShimHost owns itself, and is
@@ -70,10 +69,6 @@ class AppShimHost : public IPC::Listener,
 
   // Called when the app shim process notifies that the app should quit.
   void OnQuit();
-  
-  //Called when the app shim indicates a menu item was selected, and
-  //some js action should be taken
-  void OnMenuItemSelected(const std::string& title, const std::string& parent);
 
   // apps::AppShimHandler::Host overrides:
   void OnAppLaunchComplete(apps::AppShimLaunchResult result) override;
@@ -81,8 +76,6 @@ class AppShimHost : public IPC::Listener,
   void OnAppHide() override;
   void OnAppUnhideWithoutActivation() override;
   void OnAppRequestUserAttention(apps::AppShimAttentionType type) override;
-  void OnMDAMenuUpdated(content::MDAMenuItem& menu) override;
-  void BuildMenuItemDTO(content::MDAMenuItem& menu, AppShimMsg_MenuItemDTO& parent);
   
   base::FilePath GetProfilePath() const override;
   std::string GetAppId() const override;

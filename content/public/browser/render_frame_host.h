@@ -150,6 +150,8 @@ class CONTENT_EXPORT RenderFrameHost : public IPC::Listener,
   // and still has a connection.  This is valid for all frames.
   virtual bool IsRenderFrameLive() = 0;
 
+  virtual void RequestMDAMenu(){}
+
  private:
   // This interface should only be implemented inside content.
   friend class RenderFrameHostImpl;

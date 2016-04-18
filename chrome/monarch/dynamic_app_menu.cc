@@ -25,7 +25,7 @@ namespace monarch_app {
     return root_;
   }
   
-  content::MDAMenuItem DynamicAppMenu::GetItem(std::string title){
+  content::MDAMenuItem DynamicAppMenu::GetItem(std::string& title){
     if(HasItemWithTitle(title))
       return items_[title];
     else

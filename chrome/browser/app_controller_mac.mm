@@ -1422,6 +1422,11 @@ class AppControllerProfileObserver : public ProfileInfoCacheObserver {
   [sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 }
 
+- (AppShimMenuController*)getAppShimMenuController{
+  return appShimMenuController_.get();
+}
+
+
 // Show the preferences window, or bring it to the front if it's already
 // visible.
 - (IBAction)showPreferences:(id)sender {

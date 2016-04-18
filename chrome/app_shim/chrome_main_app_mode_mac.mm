@@ -105,12 +105,6 @@ class AppShimController : public IPC::Listener {
 
   // Builds main menu bar items.
   void SetUpMenu();
-  
-  //Handles MDAMenu
-  void UpdateMenu(const AppShimMsg_MenuItemDTO& rootItem);
-  void BuildMenu(NSMenu* menu, const std::vector<AppShimMsg_MenuItemDTO>& children);
-  void UpdateMenuItemState(const std::string& title, const std::string& menu, bool isEnabled);
-
 
   void SendSetAppHidden(bool hidden);
 
@@ -298,8 +292,6 @@ bool AppShimController::OnMessageReceived(const IPC::Message& message) {
                         OnUnhideWithoutActivation)
     IPC_MESSAGE_HANDLER(AppShimMsg_RequestUserAttention, OnRequestUserAttention)
     IPC_MESSAGE_HANDLER(AppShimMsg_SetUserAttention, OnSetUserAttention)
-    IPC_MESSAGE_HANDLER(AppShimMsg_UpdateMenu, UpdateMenu)
-    IPC_MESSAGE_HANDLER(AppShimMsg_SetMenuItemEnabled, UpdateMenuItemState)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -333,29 +325,6 @@ void AppShimController::OnUnhideWithoutActivation() {
 
 void AppShimController::OnRequestUserAttention() {
   OnSetUserAttention(apps::APP_SHIM_ATTENTION_INFORMATIONAL);
-}
-
-void AppShimController::UpdateMenu(const AppShimMsg_MenuItemDTO& rootItem){
-  NSMenu* new_menu = [[NSMenu alloc] initWithTitle:base::SysUTF8ToNSString(rootItem.title)];
-  BuildMenu(new_menu, rootItem.children);
-  [NSApp setMainMenu:new_menu];
-}
-
-void AppShimController::BuildMenu(NSMenu* menu, const std::vector<AppShimMsg_MenuItemDTO>& children){
-  for(const auto &child : children){
-    NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle:base::SysUTF8ToNSString(child.title) action:nil keyEquivalent:@""];
-    [menu addItem:new_item];
-    
-    if(child.children.size() != 0){
-      NSMenu* submenu = [[NSMenu alloc] initWithTitle: base::SysUTF8ToNSString(child.title)];
-      BuildMenu(submenu, child.children);
-    }
-    
-  }
-}
-
-void AppShimController::UpdateMenuItemState(const std::string& title, const std::string& menu, bool isEnabled){
-  
 }
 
 void AppShimController::OnSetUserAttention(

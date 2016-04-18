@@ -164,6 +164,8 @@ class WorkAreaWatcherObserver;
 // apps.
 - (void)initAppShimMenuController;
 
+- (AppShimMenuController*)getAppShimMenuController;
+
 // Called when the user has changed browser windows, meaning the backing profile
 // may have changed. This can cause a rebuild of the user-data menus. This is a
 // no-op if the new profile is the same as the current one. This will always be
