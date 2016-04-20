@@ -53,7 +53,7 @@ namespace blink {
   {
     return constUnwrap<HTMLMDAMenuItemElement>()->disabled();
   }
-  
+    
   WebMDAMenuItemElement::WebMDAMenuItemElement(const PassRefPtrWillBeRawPtr<HTMLMDAMenuItemElement>& e)
   : WebElement(e){}
   

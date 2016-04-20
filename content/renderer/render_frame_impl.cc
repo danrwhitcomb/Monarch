@@ -3047,6 +3047,7 @@ void RenderFrameImpl::BuildMenuDTO(const WebMDAMenuElement& menu, content::MDAMe
         BuildMenuDTO(child_menu, new_item);
         new_item.title = child_menu.title().latin1();
         new_item.enabled = true;
+        new_item.isApp = child_menu.isApp();
         rootItem.children.push_back(new_item);
         
       } else if (child_element.hasHTMLTagName("mdamenuitem")){

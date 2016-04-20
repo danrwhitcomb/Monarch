@@ -272,6 +272,8 @@ void SetChromeCyclesWindows(int sequence_number) {
         keyEquivalent:(NSString*)keyEquivalent;
 // Set the title using |resourceId_| and unset the source item's key equivalent.
 - (void)enableForApp:(const Extension*)app;
+// Set the title from some NSString, most likely the injected title
+- (void)enableForTitle:(NSString*) title;
 // Restore the source item's key equivalent.
 - (void)disable;
 @end
@@ -329,6 +331,19 @@ void SetChromeCyclesWindows(int sequence_number) {
 
   [menuItem_ setTitle:l10n_util::GetNSStringF(resourceId_,
                                               base::UTF8ToUTF16(app->name()))];
+}
+
+- (void)enableForTitle:(NSString*) title {
+  // It seems that two menu items that have the same key equivalent must also
+  // have the same action for the keyboard shortcut to work. (This refers to the
+  // original keyboard shortcut, regardless of any overrides set in OSX).
+  // In order to let the app menu items have a different action, we remove the
+  // key equivalent of the original items and restore them later.
+  [sourceItem_ setKeyEquivalent:@""];
+  if (!resourceId_)
+    return;
+  
+  [menuItem_ setTitle:l10n_util::GetNSStringF(resourceId_, base::SysNSStringToUTF16(title))];
 }
 
 - (void)disable {
@@ -508,7 +523,7 @@ void SetChromeCyclesWindows(int sequence_number) {
   // First, reset menu to wipe old MDAItems
   [self buildAppMenuItems];
   
-  if(rootItem->children.size() == 0 || rootItem->children[0].title != "app"){
+  if(rootItem->children.size() == 0){
     return;
   }
   
@@ -521,8 +536,10 @@ void SetChromeCyclesWindows(int sequence_number) {
     content::MDAMenuItem top_child = rootItem->children[i];
     NSString* title = base::SysUTF8ToNSString(top_child.title);
     
-    if([title isEqualToString:@"app"]){
+    if(top_child.isApp){
         [self addChildrenToItem:top_child.children item:appMenuItem_];
+        [[appMenuItem_ submenu] setTitle:title];
+        appTitle_ = top_child.title;
     } else if([title isEqualToString:l10n_util::GetNSString(IDS_FILE_MENU_MAC)]){
         [self addChildrenToItem:top_child.children item:fileMenuItem_];
     } else if([title isEqualToString:l10n_util::GetNSString(IDS_EDIT_MENU_MAC)]){
@@ -531,7 +548,7 @@ void SetChromeCyclesWindows(int sequence_number) {
     } else if([title isEqualToString:l10n_util::GetNSString(IDS_WINDOW_MENU_MAC)]){
         [self addChildrenToItem:top_child.children item:windowMenuItem_];
     } else {
-      NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle:title action:@selector(onMDAMenuItemSelected:) keyEquivalent:@""];
+      NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle:title action:nil keyEquivalent:@""];
       [new_item setEnabled:top_child.enabled];
       
       [self addChildrenToItem:top_child.children item:new_item];
@@ -546,7 +563,7 @@ void SetChromeCyclesWindows(int sequence_number) {
   return [title isEqualToString:l10n_util::GetNSString(IDS_FILE_MENU_MAC)] ||
          [title isEqualToString:l10n_util::GetNSString(IDS_EDIT_MENU_MAC)] ||
          [title isEqualToString:l10n_util::GetNSString(IDS_WINDOW_MENU_MAC)] ||
-         [title isEqualToString:@"app"];
+         [title isEqualToString:base::SysUTF8ToNSString(appId_)];
 }
 
 -(void)addChildrenToItem:(std::vector<content::MDAMenuItem>) children item:(NSMenuItem*) item {
@@ -670,6 +687,7 @@ void SetChromeCyclesWindows(int sequence_number) {
     [self removeMenuItems];
 
   appId_ = app->id();
+  appTitle_.clear();
   
   [self buildAppMenuItems];
   
@@ -690,6 +708,7 @@ void SetChromeCyclesWindows(int sequence_number) {
     return;
 
   appId_.clear();
+  appTitle_.clear();
   [self removeMenuItems];
   if (IsAppWindowCyclingEnabled()) {
     base::MessageLoop::current()->PostTask(
@@ -706,7 +725,7 @@ void SetChromeCyclesWindows(int sequence_number) {
   NSMenu* mainMenu = [NSApp mainMenu];
   for (NSMenuItem* item in [mainMenu itemArray])
     [item setHidden:YES];
-
+  
   [aboutDoppelganger_ enableForApp:app];
   [hideDoppelganger_ enableForApp:app];
   [quitDoppelganger_ enableForApp:app];
@@ -714,19 +733,30 @@ void SetChromeCyclesWindows(int sequence_number) {
   [openDoppelganger_ enableForApp:app];
   [closeWindowDoppelganger_ enableForApp:app];
 
-  if(!app->is_lifespan_dynamic()){
-    [appMenuItem_ setTitle:base::SysUTF8ToNSString(appId_)];
+  [appMenuItem_ setTitle:base::SysUTF8ToNSString(appId_)];
+  if(appTitle_.empty()){
     [[appMenuItem_ submenu] setTitle:title];
+  } else {
+    NSString* appTitle = base::SysUTF8ToNSString(appTitle_);
+    [[appMenuItem_ submenu] setTitle:appTitle];
+    [aboutDoppelganger_ enableForTitle:appTitle];
+    [quitDoppelganger_ enableForTitle:appTitle];
+    [hideDoppelganger_ enableForTitle:appTitle];
+  }
+  
+  SetItemWithTagVisible(editMenuItem_,
+                        IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE,
+                        app->is_hosted_app(), true);
+  SetItemWithTagVisible(editMenuItem_, IDC_FIND_MENU, app->is_hosted_app(),false);
+
+
+  if(!app->is_lifespan_dynamic()){
+    
 
     [mainMenu addItem:appMenuItem_];
     [mainMenu addItem:fileMenuItem_];
 
-    SetItemWithTagVisible(editMenuItem_,
-                          IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE,
-                          app->is_hosted_app(), true);
-    SetItemWithTagVisible(editMenuItem_, IDC_FIND_MENU, app->is_hosted_app(),
-                          false);
-    [mainMenu addItem:editMenuItem_];
+        [mainMenu addItem:editMenuItem_];
 
     if (app->is_hosted_app()) {
       [mainMenu addItem:viewMenuItem_];
@@ -735,16 +765,6 @@ void SetChromeCyclesWindows(int sequence_number) {
     [mainMenu addItem:windowMenuItem_];
     
   } else {
-  
-    [appMenuItem_ setTitle:base::SysUTF8ToNSString(appId_)];
-    [[appMenuItem_ submenu] setTitle:title];
-  
-    SetItemWithTagVisible(editMenuItem_,
-                          IDC_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE,
-                          app->is_hosted_app(), true);
-    SetItemWithTagVisible(editMenuItem_, IDC_FIND_MENU, app->is_hosted_app(),
-                          false);
-
     for(NSMenuItem* item in menuItems_){
       [mainMenu addItem:item];
     }
@@ -761,6 +781,12 @@ void SetChromeCyclesWindows(int sequence_number) {
     [mainMenu removeItem:historyMenuItem_];
   [mainMenu removeItem:editMenuItem_];
   [mainMenu removeItem:windowMenuItem_];
+  
+  for(NSMenuItem* item in menuItems_){
+    if([mainMenu indexOfItem:item] >= 0){
+      [mainMenu removeItem:item];
+    }
+  }
 
   // Restore the Chrome main menu bar.
   for (NSMenuItem* item in [mainMenu itemArray])

@@ -19,4 +19,5 @@
 
 interface HTMLMDAMenuElement : HTMLElement {
     [Reflect] attribute DOMString title;
+    [Reflect] attribute DOMString app;
 };

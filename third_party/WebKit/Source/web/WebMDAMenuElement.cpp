@@ -44,6 +44,11 @@ namespace blink {
     return constUnwrap<HTMLMDAMenuElement>()->title();
   }
   
+  bool WebMDAMenuElement::isApp() const
+  {
+    return constUnwrap<HTMLMDAMenuElement>()->isAppMenu();
+  }
+  
   WebMDAMenuElement::WebMDAMenuElement(const PassRefPtrWillBeRawPtr<HTMLMDAMenuElement>& e)
   : WebElement(e)
   {

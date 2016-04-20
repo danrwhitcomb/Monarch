@@ -30,6 +30,7 @@ namespace extensions {
  @private
   // The extension id of the currently focused packaged app.
   std::string appId_;
+  std::string appTitle_;
   // Items that need a doppelganger.
   base::scoped_nsobject<DoppelgangerMenuItem> aboutDoppelganger_;
   base::scoped_nsobject<DoppelgangerMenuItem> hideDoppelganger_;

@@ -39,6 +39,10 @@ namespace blink {
     return !isHTMLMDAMenuElement(parent);
   }
   
+  bool HTMLMDAMenuElement::isAppMenu() const {
+    return hasAttribute(appAttr);
+  }
+  
   HTMLMDAMenuElement* HTMLMDAMenuElement::getRootMenuElement(){
   
     //Check if current element is root

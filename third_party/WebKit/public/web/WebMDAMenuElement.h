@@ -56,6 +56,7 @@ namespace blink {
     
     
     BLINK_EXPORT WebString title() const;
+    BLINK_EXPORT bool isApp() const;
     
 #if BLINK_IMPLEMENTATION
     WebMDAMenuElement(const PassRefPtrWillBeRawPtr<HTMLMDAMenuElement>&);

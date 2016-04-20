@@ -18,6 +18,7 @@ struct MDAMenuItem {
   std::string title;
   std::string action;
   bool enabled;
+  bool isApp;
   
   std::vector<MDAMenuItem> children;
 };
