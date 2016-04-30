@@ -16,20 +16,40 @@ Monarch has only been tested thoroughly on Mac OS 10.10,
 but should be stable onother recent versions of Mac OS X. Just open the app bundle to run
 
 ##Build Instructions
+Download [GYP](https://gyp.gsrc.io/) and run the setup from the root dir
+    
+    $ python setup.py install
+
+
 Download and install [Ninja](https://www.google.com/search?q=ninja&oq=ninja&aqs=chrome..69i57j69i60l3j69i59j69i61.775j0j1&sourceid=chrome&ie=UTF-8#q=Ninja+build), the required build system.
+
+
+Set the generators for the ninja build:
+
+    $ export GYP_GENERATORS=ninja
+
+If you want to make the Xcode project, then this as well:
+
+    $ export GYP_GENERATORS=xcode-ninja, $GYP_GENERATORS
+
+Finally, create the build files from the Monarch root directory:
 
     $ cd src/build
     $ ./gyp_chromium
     
-###Build Debug Version
+###Do the build
+The `-C` option makes ninja switch directories before doing anything. GYP puts the build files for both Debug and Release in their respective `out/` directory. All built files will be in its respective directory.
+
+####Build Debug Version
 Run from project root:
 
     $ ninja -C out/Debug chrome
 
-###Build Release Version
+####Build Release Version
 Run from project root:
 
     $ ninja -C out/Release chrome
+
 
 ##How to Use
 There are three ways to open a page in an app bundle form.
