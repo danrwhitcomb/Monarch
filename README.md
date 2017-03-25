@@ -57,12 +57,12 @@ There are three ways to open a page in an app bundle form.
 in Monarch's menu bar. Then on either menu, select 'Enter App Mode'. The current tab you are on 
 will close and the app will open with that tab's page: sessions are not preserved when opening in
 app mode, so you will lose any current data on the page
-2. You can open an app by tying the URL into the navigation bar. If it is recognized as a valid URL, 
+2. You can open an app by typing the URL into the navigation bar. If it is recognized as a valid URL, 
 there should also be an option to open that URL as an App, and there will be an icon next to the URL
 that says 'App'. Selecting this option will launch that URL in an app.
 
 ## Getting a bundle and reading the paper
-You can get a bundle that was created on Mac OS 10.10 [here](https://halfbyte.io/projects/). If you want to take the team, the accompanying paper justifiying and explaining the work can be found there.
+You can get a bundle that was created on Mac OS 10.10 [here](https://halfbyte.io/projects/). If you want to take the time, the accompanying paper justifiying and explaining the work can be found there.
 
 ## Licensing
 This is distributed under the FreeBSD License, see LICENSE file in release directory for more information
