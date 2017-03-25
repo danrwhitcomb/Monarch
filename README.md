@@ -62,7 +62,7 @@ there should also be an option to open that URL as an App, and there will be an 
 that says 'App'. Selecting this option will launch that URL in an app.
 
 ## Getting a bundle and reading the paper
-You can get a bundle that was created on Mac OS 10.10 (here)[https://halfbyte.io/projects/]. If you want to take the team, the accompanying paper justifiying and explaining the work can be found there.
+You can get a bundle that was created on Mac OS 10.10 [here](https://halfbyte.io/projects/). If you want to take the team, the accompanying paper justifiying and explaining the work can be found there.
 
 ## Licensing
 This is distributed under the FreeBSD License, see LICENSE file in release directory for more information
