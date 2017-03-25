@@ -1,10 +1,10 @@
 # MONARCH 1.1
 A Web Browser for the modern application
-By Daniel Whitcomb 2016
+By Dan Whitcomb 2016
 
 ## Introduction
 Monarch is the product of a senior research project by 
-Daniel Whitcomb '16 at Dartmouth College for the computer science major. 
+Dan Whitcomb '16 at Dartmouth College for the computer science major. 
 It came out of the recognition that web applications require 
 a different type of experience than basic web pages. 
 Monarch allows any web page to be opened as a desktop application
@@ -38,7 +38,7 @@ Finally, create the build files from the Monarch root directory:
     $ ./gyp_chromium
     
 ### Do the build
-The `-C` option makes ninja switch directories before doing anything. GYP puts the build files for both Debug and Release in their respective `out/` directory. All built files will be in its respective directory.
+The `-C` option makes ninja switch directories before doing anything. GYP puts the build files for both Debug and Release in their respective `out/` directory. All built files will be in its respective directory. Doing an initial build can take hours. Don't try unless you really want to commit that time.
 
 #### Build Debug Version
 Run from project root:
@@ -61,8 +61,8 @@ app mode, so you will lose any current data on the page
 there should also be an option to open that URL as an App, and there will be an icon next to the URL
 that says 'App'. Selecting this option will launch that URL in an app.
 
-## Documentation
-Documentation is available on the site's homepage at http://cs.dartmouth.edu/~drw/docs.html
+## Getting a bundle and reading the paper
+You can get a bundle that was created on Mac OS 10.10 (here)[https://halfbyte.io/projects/]. If you want to take the team, the accompanying paper justifiying and explaining the work can be found there.
 
 ## Licensing
 This is distributed under the FreeBSD License, see LICENSE file in release directory for more information
